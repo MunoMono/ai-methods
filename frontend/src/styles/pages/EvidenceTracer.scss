@@ -1,0 +1,14 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+
+.evidence-tracer {
+  .tracer__description {
+    margin-bottom: $spacing-06;
+    color: $text-secondary;
+  }
+
+  .tracer__visualization {
+    min-height: 32rem;
+    margin-top: $spacing-05;
+  }
+}

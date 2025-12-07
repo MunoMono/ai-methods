@@ -1,0 +1,7 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+
+.app-content {
+  min-height: calc(100vh - 3rem);
+  background-color: $layer-01;
+}

@@ -1,0 +1,95 @@
+version: '3.9'
+
+services:
+  # PostgreSQL with pgvector extension
+  db:
+    image: ankane/pgvector:latest
+    container_name: epistemic-drift-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-epistemic_drift}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - epistemic-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: epistemic-drift-backend
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-epistemic_drift}
+      GRANITE_MODEL_PATH: ${GRANITE_MODEL_PATH:-ibm-granite/granite-4.0-h-small-instruct}
+      GRANITE_DEVICE: ${GRANITE_DEVICE:-cpu}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+      - model_cache:/root/.cache/huggingface
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - epistemic-network
+    restart: unless-stopped
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: epistemic-drift-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - epistemic-network
+    restart: unless-stopped
+
+  # MinIO (S3-compatible storage) - Optional
+  minio:
+    image: minio/minio:latest
+    container_name: epistemic-drift-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - epistemic-network
+    restart: unless-stopped
+
+networks:
+  epistemic-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  backend_logs:
+  model_cache:
+  minio_data:

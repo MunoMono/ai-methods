@@ -1,0 +1,76 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+import logging
+
+from app.api.routes import agent, sessions, experiments
+from app.core.config import settings
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs/app.log'),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup and shutdown events"""
+    logger.info("Starting Epistemic Drift Research API")
+    logger.info(f"Environment: {settings.ENVIRONMENT}")
+    # Initialize models, database connections, etc.
+    yield
+    logger.info("Shutting down Epistemic Drift Research API")
+
+
+app = FastAPI(
+    title="Epistemic Drift Research API",
+    description="FastAPI backend for cybernetic research with Granite LLM",
+    version="0.1.0",
+    lifespan=lifespan
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(agent.router, prefix="/api/agent", tags=["agent"])
+app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
+app.include_router(experiments.router, prefix="/api/experiments", tags=["experiments"])
+
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Epistemic Drift Research API",
+        "version": "0.1.0",
+        "docs": "/docs"
+    }
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )

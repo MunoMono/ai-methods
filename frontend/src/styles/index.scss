@@ -1,0 +1,14 @@
+// Custom application styles on top of Carbon
+// Carbon base styles are imported in main.jsx
+
+@use '@carbon/react';
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}

@@ -1,0 +1,9 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+
+.session-recorder {
+  .recorder__description {
+    margin-bottom: $spacing-06;
+    color: $text-secondary;
+  }
+}
