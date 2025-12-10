@@ -61,15 +61,12 @@ const Header = ({ currentTheme, onThemeToggle }) => {
         >
           {isDark ? <Light size={20} /> : <Asleep size={20} />}
         </HeaderGlobalAction>
-        <HeaderGlobalAction
-          aria-label={isAuthenticated ? user?.name || 'User' : 'Login'}
-          tooltipAlignment="end"
-        >
+        <HeaderGlobalAction aria-label="User menu" tooltipAlignment="end">
           <UserAvatar size={20} />
-          <Switcher aria-label="User Menu">
+          <Switcher aria-label="User menu">
             {isAuthenticated ? (
               <>
-                <SwitcherItem aria-label="Profile">
+                <SwitcherItem aria-label="User email">
                   {user?.email}
                 </SwitcherItem>
                 <SwitcherDivider />
