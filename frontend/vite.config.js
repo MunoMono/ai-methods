@@ -1,21 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
-  plugins: [
-    react(),
-    viteStaticCopy({
-      targets: [
-        {
-          src: 'node_modules/@ibm/plex/IBM-Plex-*/fonts/split/woff2/*.woff2',
-          dest: 'fonts'
-        }
-      ]
-    })
-  ],
+  plugins: [react()],
   server: {
     port: 3000,
     proxy: {
@@ -42,24 +31,6 @@ export default defineConfig({
           @use '@carbon/react/scss/utilities/focus-outline' as *;
         `
       }
-    },
-    postcss: {
-      plugins: [
-        {
-          postcssPlugin: 'rewrite-ibm-plex-urls',
-          Once(root) {
-            root.walkDecls(decl => {
-              if (decl.value.includes('~@ibm/plex')) {
-                // Rewrite ~@ibm/plex paths to /fonts/
-                decl.value = decl.value.replace(
-                  /url\(~@ibm\/plex\/IBM-Plex-[^/]+\/fonts\/split\/woff2\/([^)]+)\)/g,
-                  'url(/fonts/$1)'
-                );
-              }
-            });
-          }
-        }
-      ]
     }
   }
 })
