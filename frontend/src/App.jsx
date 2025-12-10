@@ -16,7 +16,7 @@ function App() {
   }
 
   return (
-    <Router basename="/ai-methods">
+    <Router>
       <Theme theme={theme}>
         <Header currentTheme={theme} onThemeToggle={toggleTheme} />
         <div className="app-content">
