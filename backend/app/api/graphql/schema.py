@@ -1,8 +1,8 @@
 """
-GraphQL schema for metrics and statistics
+GraphQL schema for metrics and statistics including epistemic drift analysis
 """
 import strawberry
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy import text
 import boto3
 from botocore.exceptions import ClientError
@@ -10,8 +10,11 @@ import logging
 
 from app.core.database import LocalSessionLocal
 from app.core.config import settings
+from app.models.document import Document, DocumentChunk, DriftAnalysis
+from app.services.drift_analyzer import DriftAnalyzer
 
 logger = logging.getLogger(__name__)
+drift_analyzer = DriftAnalyzer()
 
 
 def get_s3_stats() -> 'S3Stats':
@@ -175,6 +178,89 @@ class Query:
             s3_storage=s3_stats,
             total_items=total_items
         )
+    
+    @strawberry.field
+    def temporal_documents(
+        self,
+        start_year: Optional[int] = None,
+        end_year: Optional[int] = None
+    ) -> List['TemporalDocument']:
+        """Query documents by publication year"""
+        db = LocalSessionLocal()
+        try:
+            query = db.query(Document)
+            
+            if start_year:
+                query = query.filter(Document.publication_year >= start_year)
+            if end_year:
+                query = query.filter(Document.publication_year <= end_year)
+            
+            docs = query.order_by(Document.publication_year).all()
+            
+            return [
+                TemporalDocument(
+                    document_id=doc.document_id,
+                    title=doc.title or "",
+                    publication_year=doc.publication_year,
+                    status=doc.processing_status or "pending",
+                    has_diagrams=doc.has_diagrams or 0
+                )
+                for doc in docs
+            ]
+        except:
+            return []
+        finally:
+            db.close()
+    
+    @strawberry.field
+    async def epistemic_drift(
+        self,
+        start_year: int,
+        end_year: int,
+        window_size: int = 5
+    ) -> 'DriftAnalysisResult':
+        """Analyze epistemic drift between time periods"""
+        result = await drift_analyzer.analyze_temporal_drift(
+            start_year, end_year, window_size
+        )
+        
+        if 'error' in result:
+            return DriftAnalysisResult(
+                analysis_id="error",
+                start_year=start_year,
+                end_year=end_year,
+                document_count=0,
+                drift_score=0.0,
+                error=result['error']
+            )
+        
+        return DriftAnalysisResult(
+            analysis_id=result['analysis_id'],
+            start_year=result['start_year'],
+            end_year=result['end_year'],
+            document_count=result['document_count'],
+            drift_score=result['drift_score'],
+            error=None
+        )
+
+
+@strawberry.type
+class TemporalDocument:
+    document_id: str
+    title: str
+    publication_year: int
+    status: str
+    has_diagrams: int
+
+
+@strawberry.type
+class DriftAnalysisResult:
+    analysis_id: str
+    start_year: int
+    end_year: int
+    document_count: int
+    drift_score: float
+    error: Optional[str]
 
 
 schema = strawberry.Schema(query=Query)

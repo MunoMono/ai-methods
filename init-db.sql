@@ -56,3 +56,126 @@ CREATE TRIGGER update_experiments_updated_at
     BEFORE UPDATE ON experiments 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
+
+-- Create digital_assets table for S3 asset tracking
+CREATE TABLE IF NOT EXISTS digital_assets (
+    id SERIAL PRIMARY KEY,
+    filename VARCHAR(255) NOT NULL,
+    file_type VARCHAR(50),
+    s3_key VARCHAR(500),
+    metadata JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Temporal Documents Table (1965-1985 PhD research)
+CREATE TABLE IF NOT EXISTS documents (
+    id SERIAL PRIMARY KEY,
+    document_id VARCHAR(255) UNIQUE NOT NULL,
+    title VARCHAR(500),
+    publication_year INTEGER NOT NULL,
+    publication_date TIMESTAMP,
+    
+    -- File info
+    filename VARCHAR(255) NOT NULL,
+    file_type VARCHAR(50),
+    s3_key VARCHAR(500),
+    file_size_bytes INTEGER,
+    
+    -- Extracted content
+    extracted_text TEXT,
+    has_diagrams INTEGER DEFAULT 0,
+    diagram_s3_keys JSONB,
+    
+    -- Processing metadata
+    processed_at TIMESTAMP,
+    processing_status VARCHAR(50) DEFAULT 'pending',
+    processing_error TEXT,
+    
+    -- Metadata
+    metadata JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index on publication year for temporal queries
+CREATE INDEX IF NOT EXISTS documents_publication_year_idx 
+ON documents(publication_year);
+
+-- Document Chunks Table (for embeddings)
+CREATE TABLE IF NOT EXISTS document_chunks (
+    id SERIAL PRIMARY KEY,
+    chunk_id VARCHAR(255) UNIQUE NOT NULL,
+    document_id VARCHAR(255) NOT NULL,
+    
+    -- Chunk content
+    chunk_text TEXT NOT NULL,
+    chunk_index INTEGER,
+    chunk_type VARCHAR(50),
+    
+    -- Temporal context
+    publication_year INTEGER NOT NULL,
+    
+    -- Embeddings (pgvector)
+    embedding_vector vector(384),
+    embedding_model VARCHAR(100),
+    
+    -- Analysis results
+    key_concepts JSONB,
+    drift_score FLOAT,
+    
+    -- Metadata
+    metadata JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for vector similarity search on chunks
+CREATE INDEX IF NOT EXISTS document_chunks_vector_idx 
+ON document_chunks 
+USING ivfflat (embedding_vector vector_cosine_ops)
+WITH (lists = 100);
+
+-- Index on publication year
+CREATE INDEX IF NOT EXISTS document_chunks_publication_year_idx 
+ON document_chunks(publication_year);
+
+-- Index on document_id for joins
+CREATE INDEX IF NOT EXISTS document_chunks_document_id_idx 
+ON document_chunks(document_id);
+
+-- Drift Analysis Table
+CREATE TABLE IF NOT EXISTS drift_analyses (
+    id SERIAL PRIMARY KEY,
+    analysis_id VARCHAR(255) UNIQUE NOT NULL,
+    
+    -- Time period
+    period_start_year INTEGER NOT NULL,
+    period_end_year INTEGER NOT NULL,
+    
+    -- Documents analyzed
+    document_count INTEGER,
+    document_ids JSONB,
+    
+    -- Drift metrics
+    drift_score FLOAT,
+    conceptual_shift JSONB,
+    terminology_changes JSONB,
+    semantic_distance FLOAT,
+    
+    -- Analysis method
+    analysis_method VARCHAR(100),
+    model_used VARCHAR(100),
+    
+    -- Results
+    results JSONB,
+    visualization_data JSONB,
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metadata JSONB
+);
+
+-- Trigger for documents table
+CREATE TRIGGER update_documents_updated_at 
+    BEFORE UPDATE ON documents 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
