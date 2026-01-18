@@ -33,8 +33,8 @@ class Document(LocalBase):
     processing_status = Column(String(50), default='pending')  # pending, processing, completed, failed
     processing_error = Column(Text)
     
-    # Metadata
-    metadata = Column(JSONB)  # Author, journal, keywords, etc.
+    # Document metadata (renamed to avoid SQLAlchemy reserved word)
+    doc_metadata = Column(JSONB)  # Author, journal, keywords, etc.
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -63,8 +63,8 @@ class DocumentChunk(LocalBase):
     key_concepts = Column(JSONB)  # Extracted concepts
     drift_score = Column(Float)  # Epistemic drift score
     
-    # Metadata
-    metadata = Column(JSONB)
+    # Chunk metadata
+    chunk_metadata = Column(JSONB)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -97,6 +97,6 @@ class DriftAnalysis(LocalBase):
     results = Column(JSONB)  # Full analysis results
     visualization_data = Column(JSONB)  # Data for charts
     
-    # Metadata
+    # Analysis metadata
     created_at = Column(DateTime, default=datetime.utcnow)
-    metadata = Column(JSONB)
+    analysis_metadata = Column(JSONB)

@@ -91,8 +91,8 @@ CREATE TABLE IF NOT EXISTS documents (
     processing_status VARCHAR(50) DEFAULT 'pending',
     processing_error TEXT,
     
-    -- Metadata
-    metadata JSONB,
+    -- Metadata (renamed column)
+    doc_metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -123,8 +123,8 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     key_concepts JSONB,
     drift_score FLOAT,
     
-    -- Metadata
-    metadata JSONB,
+    -- Metadata (renamed column)
+    chunk_metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -169,9 +169,9 @@ CREATE TABLE IF NOT EXISTS drift_analyses (
     results JSONB,
     visualization_data JSONB,
     
-    -- Metadata
+    -- Metadata (renamed column)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    metadata JSONB
+    analysis_metadata JSONB
 );
 
 -- Trigger for documents table
