@@ -38,34 +38,7 @@ const Dashboard = () => {
         <Column lg={16} md={8} sm={4}>
           <div className="dashboard__granite-hero">
             <div className="dashboard__granite-hero-logo">
-              <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Outer green frame - Bottom face */}
-                <path d="M100 280 L200 340 L300 280 L200 220 Z" fill="#24a148" />
-                {/* Outer green frame - Left face */}
-                <path d="M100 120 L100 280 L200 220 L200 60 Z" fill="#198038" />
-                {/* Outer green frame - Right face */}
-                <path d="M200 60 L200 220 L300 280 L300 120 Z" fill="#42be65" />
-                {/* Outer green frame - Top light face */}
-                <path d="M100 120 L200 60 L300 120 L200 180 Z" fill="#6fdc8c" />
-                
-                {/* Middle cyan frame - Bottom face */}
-                <path d="M130 250 L200 290 L270 250 L200 210 Z" fill="#1192e8" />
-                {/* Middle cyan frame - Left face */}
-                <path d="M130 130 L130 250 L200 210 L200 90 Z" fill="#0072c3" />
-                {/* Middle cyan frame - Right face */}
-                <path d="M200 90 L200 210 L270 250 L270 130 Z" fill="#33b1ff" />
-                {/* Middle cyan frame - Top face */}
-                <path d="M130 130 L200 90 L270 130 L200 170 Z" fill="#82cfff" />
-                
-                {/* Inner blue solid cube - Bottom face */}
-                <path d="M160 230 L200 250 L240 230 L200 210 Z" fill="#0043ce" />
-                {/* Inner blue solid cube - Left face */}
-                <path d="M160 150 L160 230 L200 210 L200 130 Z" fill="#0f62fe" />
-                {/* Inner blue solid cube - Right face */}
-                <path d="M200 130 L200 210 L240 230 L240 150 Z" fill="#4589ff" />
-                {/* Inner blue solid cube - Top face */}
-                <path d="M160 150 L200 130 L240 150 L200 170 Z" fill="#78a9ff" />
-              </svg>
+              <img src="/granite-logo.png" alt="IBM Granite" />
             </div>
             <div className="dashboard__granite-hero-content">
               <div className="dashboard__granite-hero-badge">
