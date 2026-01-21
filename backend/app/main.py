@@ -4,9 +4,10 @@ from contextlib import asynccontextmanager
 from strawberry.fastapi import GraphQLRouter
 import logging
 
-from app.api.routes import agent, sessions, experiments, metrics, documents, sync, graphql_sync, provenance
+from app.api.routes import agent, sessions, experiments, metrics, documents, sync, graphql_sync, provenance, analysis
 from app.api.graphql.schema import schema
 from app.core.config import settings
+from app.services.granite_service import initialize_granite
 
 # Configure logging
 logging.basicConfig(
@@ -26,7 +27,11 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     logger.info("Starting Epistemic Drift Research API")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
-    # Initialize models, database connections, etc.
+    
+    # Initialize Granite service
+    logger.info("Initializing Granite LLM service...")
+    await initialize_granite()
+    
     yield
     logger.info("Shutting down Epistemic Drift Research API")
 
@@ -56,6 +61,7 @@ app.include_router(documents.router, prefix="/api/documents", tags=["documents"]
 app.include_router(sync.router, prefix="/api/sync", tags=["sync"])
 app.include_router(graphql_sync.router, prefix="/api/v1", tags=["graphql-sync"])
 app.include_router(provenance.router, prefix="/api/provenance", tags=["provenance"])
+app.include_router(analysis.router, prefix="/api/granite", tags=["granite-analysis"])
 
 # GraphQL endpoint
 graphql_app = GraphQLRouter(schema)
