@@ -28,10 +28,9 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Epistemic Drift Research API")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     
-    # Initialize Granite service in background (non-blocking)
-    logger.info("Starting Granite LLM service initialization in background...")
-    import asyncio
-    asyncio.create_task(initialize_granite())
+    # Granite auto-loading disabled to prevent OOM on 8GB RAM
+    # Load manually via: POST /api/granite/load-model
+    logger.info("Granite LLM service: Manual loading required (use /api/granite/load-model endpoint)")
     
     yield
     logger.info("Shutting down Epistemic Drift Research API")
