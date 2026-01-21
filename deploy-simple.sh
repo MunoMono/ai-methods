@@ -18,13 +18,17 @@ git pull
 echo -e "${BLUE}🔨 Building containers...${NC}"
 docker compose -f docker-compose.prod.yml build
 
-# Stop old containers
+# Stop old containers and remove any conflicting ones
 echo -e "${BLUE}🛑 Stopping old containers...${NC}"
-docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml down --remove-orphans
+
+# Clean up any stale containers with our names
+echo -e "${BLUE}🧹 Cleaning up stale containers...${NC}"
+docker ps -a --format '{{.Names}}' | grep -E 'epistemic-drift|ai-methods' | xargs -r docker rm -f 2>/dev/null || true
 
 # Start new containers
 echo -e "${BLUE}▶️  Starting new containers...${NC}"
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
 # Wait for health checks
 echo -e "${BLUE}⏳ Waiting for services to be healthy...${NC}"
