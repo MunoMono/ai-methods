@@ -111,6 +111,95 @@
     padding: 0 $spacing-05 $spacing-09;
   }
 
+  &__granite-tile {
+    margin-bottom: $spacing-07;
+    padding: $spacing-06;
+    background: linear-gradient(135deg, rgba(15, 98, 254, 0.05) 0%, rgba(120, 46, 227, 0.05) 100%);
+    border: 1px solid rgba(15, 98, 254, 0.2);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      height: 2px;
+      background: linear-gradient(90deg, #0f62fe, #782ee3, #0f62fe);
+      background-size: 200% 100%;
+      animation: gradient-shift 3s linear infinite;
+    }
+
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+  }
+
+  &__granite-header {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-05;
+    margin-bottom: $spacing-05;
+  }
+
+  &__granite-logo {
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 4px rgba(15, 98, 254, 0.3));
+  }
+
+  &__granite-info {
+    flex: 1;
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0 0 $spacing-04;
+      color: $text-primary;
+      background: linear-gradient(135deg, #0f62fe 0%, #782ee3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  }
+
+  &__granite-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-03;
+  }
+
+  &__granite-description {
+    color: $text-secondary;
+    line-height: 1.6;
+    margin: 0 0 $spacing-05;
+    font-size: 0.95rem;
+  }
+
+  &__granite-config {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-05;
+    padding-top: $spacing-05;
+    border-top: 1px solid rgba(15, 98, 254, 0.1);
+    font-size: 0.875rem;
+    color: $text-secondary;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: $spacing-02;
+      
+      &::before {
+        content: '•';
+        color: #0f62fe;
+        font-weight: 600;
+      }
+    }
+  }
+
   &__section-title {
     font-size: 2rem;
     font-weight: 400;

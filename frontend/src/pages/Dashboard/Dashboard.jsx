@@ -1,12 +1,21 @@
 import { Grid, Column, Tile, ClickableTile, Tag } from '@carbon/react'
 import { useNavigate } from 'react-router-dom'
-import { ChartNetwork, DataVis_1, Recording, Chemistry, Checkmark, InProgress } from '@carbon/icons-react'
+import { ChartNetwork, DataVis_1, Recording, Chemistry, Checkmark, InProgress, Chip } from '@carbon/icons-react'
+import { useEffect, useState } from 'react'
 import TemporalDriftChart from '../../components/visualizations/TemporalDriftChart'
 import StatsCards from '../../components/StatsCards/StatsCards'
 import '../../styles/pages/Dashboard.scss'
 
 const Dashboard = () => {
   const navigate = useNavigate()
+  const [graniteInfo, setGraniteInfo] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/granite/model-info')
+      .then(res => res.json())
+      .then(data => setGraniteInfo(data))
+      .catch(err => console.error('Failed to fetch Granite model info:', err))
+  }, [])
 
   return (
     <div className="dashboard">
@@ -25,6 +34,46 @@ const Dashboard = () => {
       </div>
 
       <Grid className="dashboard__content" fullWidth>
+        {graniteInfo && (
+          <Column lg={16} md={8} sm={4}>
+            <Tile className="dashboard__granite-tile">
+              <div className="dashboard__granite-header">
+                <div className="dashboard__granite-logo">
+                  <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="4" fill="#0F62FE"/>
+                    <path d="M8 12L16 8L24 12V20L16 24L8 20V12Z" fill="white" fillOpacity="0.9"/>
+                    <path d="M16 8V16M16 16L8 12M16 16L24 12M16 16V24M8 20L16 24M24 20L16 24" stroke="#0F62FE" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div className="dashboard__granite-info">
+                  <h3>IBM Granite Language Model</h3>
+                  <div className="dashboard__granite-meta">
+                    <Tag type="blue" size="sm">
+                      <Chip size={16} /> {graniteInfo.model_name || 'granite-3.1-8b-instruct'}
+                    </Tag>
+                    <Tag type={graniteInfo.is_loaded ? 'green' : 'gray'} size="sm">
+                      {graniteInfo.is_loaded ? '✓ Loaded' : 'Loading...'}
+                    </Tag>
+                    <Tag type="purple" size="sm">
+                      Device: {graniteInfo.device || 'CPU'}
+                    </Tag>
+                  </div>
+                </div>
+              </div>
+              <p className="dashboard__granite-description">
+                Enterprise-grade LLM optimized for epistemic drift analysis. 8-bit quantization for efficient CPU inference with full provenance tracking.
+              </p>
+              {graniteInfo.config && (
+                <div className="dashboard__granite-config">
+                  <span>Max Tokens: {graniteInfo.config.max_tokens}</span>
+                  <span>Temperature: {graniteInfo.config.temperature}</span>
+                  <span>Top-p: {graniteInfo.config.top_p}</span>
+                </div>
+              )}
+            </Tile>
+          </Column>
+        )}
+
         <Column lg={16} md={8} sm={4}>
           <h2 className="dashboard__section-title">System Metrics</h2>
         </Column>
