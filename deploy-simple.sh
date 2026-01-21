@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e  # Exit on any error
+
+echo "🚀 Deploying to production droplet..."
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Pull latest code
+echo -e "${BLUE}📥 Pulling latest code...${NC}"
+cd /root/ai-methods
+git pull
+
+# Build and deploy with Docker Compose v2
+echo -e "${BLUE}🔨 Building containers...${NC}"
+docker compose -f docker-compose.prod.yml build
+
+# Stop old containers
+echo -e "${BLUE}🛑 Stopping old containers...${NC}"
+docker compose -f docker-compose.prod.yml down
+
+# Start new containers
+echo -e "${BLUE}▶️  Starting new containers...${NC}"
+docker compose -f docker-compose.prod.yml up -d
+
+# Wait for health checks
+echo -e "${BLUE}⏳ Waiting for services to be healthy...${NC}"
+sleep 10
+
+# Show status
+echo -e "${GREEN}✅ Deployment complete!${NC}"
+echo ""
+docker compose -f docker-compose.prod.yml ps
+
+echo ""
+echo -e "${GREEN}🌐 Site: https://innovationdesign.io${NC}"
+echo -e "${GREEN}🔌 API: https://innovationdesign.io/api/granite/health${NC}"
