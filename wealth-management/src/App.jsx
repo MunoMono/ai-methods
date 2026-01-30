@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { Theme, Loading, Tabs, TabList, Tab, TabPanels, TabPanel, Button } from '@carbon/react'
+import { Theme, Loading, Button } from '@carbon/react'
 import { Download, Reset } from '@carbon/icons-react'
 import Header from './components/Header/Header'
 import Dashboard from './pages/Dashboard/Dashboard'
@@ -17,6 +17,7 @@ import './styles/App.scss'
 function App() {
   const [theme, setTheme] = useState('g100')
   const [portfolio, setPortfolio] = useState(DEFAULT_PORTFOLIO)
+  const [activeTab, setActiveTab] = useState('dashboard')
   const { isAuthenticated, isLoading } = useAuth0()
 
   // Load portfolio from localStorage on mount
@@ -137,36 +138,60 @@ function App() {
             </div>
           </div>
 
-          {/* Tabs */}
-          <Tabs>
-            <TabList aria-label="Portfolio tabs" contained>
-              <Tab>Dashboard</Tab>
-              <Tab>Holdings</Tab>
-              <Tab>Import</Tab>
-            </TabList>
-            <TabPanels>
-              <TabPanel>
-                <Dashboard
-                  portfolio={portfolio}
-                  onUpdateTolerancePct={handleUpdateTolerancePct}
-                />
-              </TabPanel>
-              <TabPanel>
-                <Holdings
-                  portfolio={portfolio}
-                  onUpdateHolding={handleUpdateHolding}
-                  onDeleteHolding={handleDeleteHolding}
-                  onAddHolding={handleAddHolding}
-                />
-              </TabPanel>
-              <TabPanel>
-                <Import
-                  portfolio={portfolio}
-                  onImportPortfolio={handleImportPortfolio}
-                />
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
+          {/* Simple Tab Navigation */}
+          <div className="tab-navigation" style={{ 
+            display: 'flex', 
+            gap: '0.5rem', 
+            padding: '1rem',
+            background: '#262626',
+            borderBottom: '1px solid #393939'
+          }}>
+            <Button
+              kind={activeTab === 'dashboard' ? 'primary' : 'tertiary'}
+              onClick={() => setActiveTab('dashboard')}
+              size="md"
+            >
+              Dashboard
+            </Button>
+            <Button
+              kind={activeTab === 'holdings' ? 'primary' : 'tertiary'}
+              onClick={() => setActiveTab('holdings')}
+              size="md"
+            >
+              Holdings
+            </Button>
+            <Button
+              kind={activeTab === 'import' ? 'primary' : 'tertiary'}
+              onClick={() => setActiveTab('import')}
+              size="md"
+            >
+              Import/Export
+            </Button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="tab-content">
+            {activeTab === 'dashboard' && (
+              <Dashboard
+                portfolio={portfolio}
+                onUpdateTolerancePct={handleUpdateTolerancePct}
+              />
+            )}
+            {activeTab === 'holdings' && (
+              <Holdings
+                portfolio={portfolio}
+                onUpdateHolding={handleUpdateHolding}
+                onDeleteHolding={handleDeleteHolding}
+                onAddHolding={handleAddHolding}
+              />
+            )}
+            {activeTab === 'import' && (
+              <Import
+                portfolio={portfolio}
+                onImportPortfolio={handleImportPortfolio}
+              />
+            )}
+          </div>
         </div>
       </Theme>
     </Router>
