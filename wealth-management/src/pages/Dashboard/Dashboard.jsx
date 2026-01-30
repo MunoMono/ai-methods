@@ -105,14 +105,16 @@ const Dashboard = ({ portfolio, onUpdateTolerancePct }) => {
   } catch (error) {
     console.error('Error calculating metrics:', error);
     return (
-      <div className="dashboard-page">
+      <div className="dashboard-page" style={{ padding: '2rem', background: '#262626', minHeight: '400px' }}>
         <Grid narrow>
           <Column lg={14} md={8} sm={4}>
-            <InlineNotification
-              kind="error"
-              title="Calculation error"
-              subtitle={`Error: ${error.message}`}
-            />
+            <Tile style={{ background: '#393939', color: '#f4f4f4', padding: '2rem' }}>
+              <h3 style={{ color: '#ff6b6b', marginBottom: '1rem' }}>Calculation Error</h3>
+              <p style={{ color: '#f4f4f4' }}>{error.message}</p>
+              <pre style={{ background: '#161616', padding: '1rem', marginTop: '1rem', color: '#24a148', overflow: 'auto' }}>
+                {error.stack}
+              </pre>
+            </Tile>
           </Column>
         </Grid>
       </div>
@@ -214,12 +216,12 @@ const Dashboard = ({ portfolio, onUpdateTolerancePct }) => {
   };
 
   return (
-    <div className="dashboard-page">
+    <div className="dashboard-page" style={{ padding: '1rem', background: '#262626', minHeight: '100vh' }}>
       {/* Debug info */}
       <Grid narrow>
         <Column lg={14} md={8} sm={4}>
-          <Tile style={{ marginBottom: '1rem', background: '#393939', color: '#f4f4f4' }}>
-            <p style={{ margin: 0 }}><strong>Debug:</strong> Portfolio loaded - {portfolio.portfolioName} | {portfolio.holdings.length} holdings | {portfolio.sleeves.length} sleeves</p>
+          <Tile style={{ marginBottom: '1rem', background: '#393939', color: '#f4f4f4', padding: '1rem' }}>
+            <p style={{ margin: 0, fontSize: '14px' }}><strong>✅ Debug:</strong> Portfolio loaded - {portfolio.portfolioName} | {portfolio.holdings.length} holdings | {portfolio.sleeves.length} sleeves | Total: £{totalCurrent.toLocaleString()}</p>
           </Tile>
         </Column>
       </Grid>

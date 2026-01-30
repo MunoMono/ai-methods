@@ -5,6 +5,8 @@
 
 .dashboard-page {
   padding: $spacing-05;
+  min-height: 100vh;
+  background: #262626 !important;
 
   .metrics-grid {
     margin-bottom: $spacing-06;
@@ -15,8 +17,9 @@
     align-items: center;
     gap: $spacing-04;
     padding: $spacing-05;
-    background: $layer-01;
-    border-left: 3px solid $border-interactive;
+    background: #393939 !important;
+    color: #f4f4f4 !important;
+    border-left: 3px solid #0f62fe;
     transition: all 0.2s $duration-fast-02 motion(standard, productive);
 
     &:hover {
