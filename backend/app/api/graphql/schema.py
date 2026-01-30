@@ -116,7 +116,10 @@ class PidAuthority:
     pid: str
     title: str
     document_count: int
-    pdf_count: int
+    pdf_count: int  # Total PDFs in archive
+    ml_pdf_count: int  # PDFs approved for ML training (use_for_ml=true)
+    jpg_count: int
+    ml_jpg_count: int  # JPGs/TIFFs approved for ML training
     tiff_count: int
     total_media_count: int
 
@@ -206,7 +209,10 @@ class Query:
                         pid,
                         MAX(title) as title,
                         COUNT(*) as document_count,
-                        MAX((doc_metadata->>'pdf_count')::int) as pdf_count
+                        MAX((doc_metadata->>'pdf_count')::int) as pdf_count,
+                        MAX((doc_metadata->>'ml_pdf_count')::int) as ml_pdf_count,
+                        MAX((doc_metadata->>'jpg_count')::int) as jpg_count,
+                        MAX((doc_metadata->>'ml_jpg_count')::int) as ml_jpg_count
                     FROM documents 
                     WHERE pid IS NOT NULL
                     GROUP BY pid
@@ -218,8 +224,11 @@ class Query:
                         title=row[1] or 'Untitled',
                         document_count=row[2],
                         pdf_count=row[3] or 0,
-                        tiff_count=row[3] or 0,  # TIFFs match PDFs (1:1 derivative)
-                        total_media_count=(row[3] or 0) * 2  # PDFs + TIFFs
+                        ml_pdf_count=row[4] or 0,
+                        jpg_count=row[5] or 0,
+                        ml_jpg_count=row[6] or 0,
+                        tiff_count=row[3] or 0,  # TIFFs match PDFs for now
+                        total_media_count=(row[3] or 0) + (row[5] or 0)  # PDFs + JPGs
                     )
                     for row in result.fetchall()
                 ]
