@@ -36,9 +36,16 @@ class PIDMediaCountService:
             record_v1(id: $pid) {
                 pid
                 title
-                digital_assets {
-                    filename
-                    mime
+                attached_media {
+                    id
+                    pid
+                    title
+                    pdf_files {
+                        filename
+                    }
+                    tiff_files {
+                        filename
+                    }
                 }
             }
         }
@@ -70,15 +77,21 @@ class PIDMediaCountService:
                 logger.warning(f"No record found for PID {pid}")
                 return {'pdf_count': 0, 'tiff_count': 0, 'total_count': 0}
             
-            digital_assets = record.get('digital_assets')
+            attached_media = record.get('attached_media')
             
-            if not digital_assets:
-                logger.info(f"No digital assets found for PID {pid}")
+            if not attached_media:
+                logger.info(f"No attached media found for PID {pid}")
                 return {'pdf_count': 0, 'tiff_count': 0, 'total_count': 0}
             
-            # Count PDFs and TIFFs by mime type
-            pdf_count = sum(1 for asset in digital_assets if asset.get('mime') == 'application/pdf')
-            tiff_count = sum(1 for asset in digital_assets if asset.get('mime') in ['image/tiff', 'image/tif'])
+            # Count PDF and TIFF files across all attached media items
+            pdf_count = 0
+            tiff_count = 0
+            
+            for media_item in attached_media:
+                pdf_files = media_item.get('pdf_files') or []
+                tiff_files = media_item.get('tiff_files') or []
+                pdf_count += len(pdf_files)
+                tiff_count += len(tiff_files)
             
             result = {
                 'pdf_count': pdf_count,
@@ -86,7 +99,7 @@ class PIDMediaCountService:
                 'total_count': pdf_count + tiff_count
             }
             
-            logger.info(f"PID {pid}: {result['pdf_count']} PDFs, {result['tiff_count']} TIFFs")
+            logger.info(f"PID {pid}: {result['pdf_count']} PDFs, {result['tiff_count']} TIFFs from {len(attached_media)} attached media items")
             return result
             
         except requests.exceptions.RequestException as e:
