@@ -66,17 +66,19 @@ const Header = ({ currentTheme, onThemeToggle }) => {
           {isDark ? <Light size={20} /> : <Asleep size={20} />}
         </HeaderGlobalAction>
         {isAuthenticated && (
-          <span style={{ 
+          <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             height: '3rem',
-            padding: '0 0.5rem',
+            padding: '0 1rem',
             color: 'var(--cds-text-secondary)',
             fontSize: '0.875rem',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            border: 'none',
+            outline: 'none'
           }}>
             Hello Graham
-          </span>
+          </div>
         )}
         <HeaderGlobalAction
           aria-label={isAuthenticated ? 'Logout' : 'Login'}
