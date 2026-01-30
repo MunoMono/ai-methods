@@ -51,9 +51,8 @@ const StatsCards = () => {
               documentCount
               pdfCount
               mlPdfCount
-              jpgCount
-              mlJpgCount
               tiffCount
+              mlTiffCount
               totalMediaCount
             }
           }
