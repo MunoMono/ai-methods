@@ -7,14 +7,12 @@ services:
       dockerfile: Dockerfile
     container_name: wealth-management-frontend
     restart: unless-stopped
-    ports:
-      - "3001:80"
-      - "4431:443"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - wealth-management-network
+      - ai-methods_epistemic-network  # Connect to main app's network
 
 networks:
   wealth-management-network:
     driver: bridge
+  ai-methods_epistemic-network:
+    external: true  # Use the main app's network
