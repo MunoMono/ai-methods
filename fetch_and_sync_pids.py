@@ -101,7 +101,7 @@ def fetch_records():
         return None
 
 def analyze_records(data):
-    """Analyze the records and return parent PIDs"""
+    """Analyze the records and return parent PIDs with metadata"""
     if not data or 'data' not in data:
         print("❌ No data in response")
         if data and 'errors' in data:
@@ -111,15 +111,29 @@ def analyze_records(data):
     records = data['data'].get('records_v1', [])
     print(f"📊 Total parent records: {len(records)}\n")
     
-    parent_pids = []
+    parent_records = []
     
     for record in records:
         pid = record.get('pid')
         title = record.get('title', 'Untitled')
         attached_media = record.get('attached_media', [])
         
-        # Count media by type
-        pdf_count = sum(1 for m in attached_media if m.get('pdf_files'))
+        # Count PDFs with ML TRUE flag
+        pdf_count = 0
+        for media in attached_media:
+            has_pdf = bool(media.get('pdf_files'))
+            digital_assets = media.get('digital_assets', [])
+            # digital_assets is a list, check if any have use_for_ml=True
+            use_for_ml = False
+            if isinstance(digital_assets, list):
+                use_for_ml = any(asset.get('use_for_ml', False) for asset in digital_assets if isinstance(asset, dict))
+            elif isinstance(digital_assets, dict):
+                use_for_ml = digital_assets.get('use_for_ml', False)
+            
+            if has_pdf and use_for_ml:
+                pdf_count += 1
+        
+        # Count all JPGs
         jpg_count = sum(1 for m in attached_media if m.get('jpg_derivatives'))
         
         # Collect child PIDs
@@ -128,38 +142,53 @@ def analyze_records(data):
         print(f"📄 PID: {pid}")
         print(f"   Title: {title}")
         print(f"   Attached Media: {len(attached_media)} items")
-        print(f"   - PDFs: {pdf_count}")
+        print(f"   - PDFs (ML=TRUE): {pdf_count}")
         print(f"   - JPGs: {jpg_count}")
         if child_pids:
             print(f"   - Child PIDs: {child_pids}")
         print()
         
         if pid:
-            parent_pids.append(pid)
+            parent_records.append({
+                'pid': pid,
+                'title': title,
+                'pdf_count': pdf_count,
+                'year': record.get('project_start_date', '1970')[:4] if record.get('project_start_date') else '1970'
+            })
     
-    return parent_pids
+    return parent_records
 
-def insert_pids_to_droplet(parent_pids):
-    """Insert parent PIDs to droplet database"""
-    print(f"\n📝 Inserting {len(parent_pids)} parent PIDs to droplet database...")
+def insert_pids_to_droplet(parent_records):
+    """Insert parent PIDs with metadata to droplet database"""
+    print(f"\n📝 Inserting {len(parent_records)} parent PIDs to droplet database...")
     
-    for pid in parent_pids:
-        # Create a document record with this PID
-        # For now, just insert the PID - the sync service can enrich later
+    for record in parent_records:
+        pid = record['pid']
+        title = record['title'].replace("'", "''")  # Escape single quotes
+        pdf_count = record['pdf_count']
+        year = record['year']
+        
+        # Create a document record with this PID and metadata
+        json_metadata = json.dumps({"pdf_count": pdf_count})
         insert_sql = f"""
-        INSERT INTO documents (document_id, title, publication_year, filename, pid)
+        INSERT INTO documents (document_id, title, publication_year, filename, pid, doc_metadata)
         VALUES (
             'doc_pid_{pid}',
-            'Authority Record {pid}',
-            1970,
+            '{title}',
+            {year},
             '{pid}.pdf',
-            '{pid}'
+            '{pid}',
+            '{json_metadata}'::jsonb
         )
-        ON CONFLICT (pid) DO NOTHING;
+        ON CONFLICT (pid) DO UPDATE SET
+            title = EXCLUDED.title,
+            publication_year = EXCLUDED.publication_year,
+            doc_metadata = EXCLUDED.doc_metadata;
         """
         
         cmd = f'ssh root@104.248.170.26 "docker exec epistemic-drift-db psql -U postgres -d epistemic_drift -c \\"{insert_sql}\\""'
-        print(f"  Inserting PID: {pid}")
+        print(f"  Inserting PID: {pid} ({title})")
+        print(f"    PDF count (ML=TRUE): {pdf_count}")
         import subprocess
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if result.returncode != 0:
@@ -174,20 +203,20 @@ if __name__ == "__main__":
     data = fetch_records()
     
     if data:
-        # Analyze and get parent PIDs
-        parent_pids = analyze_records(data)
+        # Analyze and get parent records with metadata
+        parent_records = analyze_records(data)
         
-        if parent_pids:
-            print(f"\n🎯 Found {len(parent_pids)} parent PIDs to sync")
+        if parent_records:
+            print(f"\n🎯 Found {len(parent_records)} parent PIDs to sync")
             
             # Insert to droplet
-            insert_pids_to_droplet(parent_pids)
+            insert_pids_to_droplet(parent_records)
             
             # Verify
             print("\n🔍 Verifying database...")
             import subprocess
             result = subprocess.run(
-                'ssh root@104.248.170.26 "docker exec epistemic-drift-db psql -U postgres -d epistemic_drift -c \'SELECT COUNT(DISTINCT pid) FROM documents WHERE pid IS NOT NULL;\'"',
+                'ssh root@104.248.170.26 "docker exec epistemic-drift-db psql -U postgres -d epistemic_drift -c \\"SELECT pid, title FROM documents WHERE pid IS NOT NULL ORDER BY pid;\\""',
                 shell=True,
                 capture_output=True,
                 text=True

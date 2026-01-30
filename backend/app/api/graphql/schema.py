@@ -206,9 +206,7 @@ class Query:
                         pid,
                         MAX(title) as title,
                         COUNT(*) as document_count,
-                        MAX(pdf_count) as pdf_count,
-                        MAX(tiff_count) as tiff_count,
-                        MAX(total_media_count) as total_media_count
+                        MAX((doc_metadata->>'pdf_count')::int) as pdf_count
                     FROM documents 
                     WHERE pid IS NOT NULL
                     GROUP BY pid
@@ -220,8 +218,8 @@ class Query:
                         title=row[1] or 'Untitled',
                         document_count=row[2],
                         pdf_count=row[3] or 0,
-                        tiff_count=row[4] or 0,
-                        total_media_count=row[5] or 0
+                        tiff_count=row[3] or 0,  # TIFFs match PDFs (1:1 derivative)
+                        total_media_count=(row[3] or 0) * 2  # PDFs + TIFFs
                     )
                     for row in result.fetchall()
                 ]
