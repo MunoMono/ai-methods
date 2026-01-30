@@ -43,8 +43,9 @@ class PIDMediaCountService:
                     pdf_files {
                         filename
                     }
-                    tiff_files {
+                    jpg_derivatives {
                         filename
+                        role
                     }
                 }
             }
@@ -83,15 +84,20 @@ class PIDMediaCountService:
                 logger.info(f"No attached media found for PID {pid}")
                 return {'pdf_count': 0, 'tiff_count': 0, 'total_count': 0}
             
-            # Count PDF and TIFF files across all attached media items
+            # Count PDF files and JPG derivatives (which may include TIFFs as source)
             pdf_count = 0
             tiff_count = 0
             
             for media_item in attached_media:
                 pdf_files = media_item.get('pdf_files') or []
-                tiff_files = media_item.get('tiff_files') or []
+                jpg_derivatives = media_item.get('jpg_derivatives') or []
+                
                 pdf_count += len(pdf_files)
-                tiff_count += len(tiff_files)
+                # JPG derivatives are generated from source images (often TIFFs)
+                # Count master/preservation derivatives as potential TIFF sources
+                for deriv in jpg_derivatives:
+                    if deriv.get('role') in ['master', 'preservation', 'access-master']:
+                        tiff_count += 1
             
             result = {
                 'pdf_count': pdf_count,
@@ -99,7 +105,7 @@ class PIDMediaCountService:
                 'total_count': pdf_count + tiff_count
             }
             
-            logger.info(f"PID {pid}: {result['pdf_count']} PDFs, {result['tiff_count']} TIFFs from {len(attached_media)} attached media items")
+            logger.info(f"PID {pid}: {result['pdf_count']} PDFs, {result['tiff_count']} TIFF-source derivatives from {len(attached_media)} attached media items")
             return result
             
         except requests.exceptions.RequestException as e:
