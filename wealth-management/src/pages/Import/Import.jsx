@@ -48,9 +48,9 @@ const Import = ({ portfolio, onImportPortfolio }) => {
 
   return (
     <div className="import-page">
-      <Grid>
+      <Grid narrow>
         {notification && (
-          <Column lg={16} md={8} sm={4}>
+          <Column lg={14} md={8} sm={4}>
             <InlineNotification
               kind={notification.kind}
               title={notification.title}

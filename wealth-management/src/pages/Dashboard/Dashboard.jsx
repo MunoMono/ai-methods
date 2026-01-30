@@ -144,7 +144,7 @@ const Dashboard = ({ portfolio, onUpdateTolerancePct }) => {
     <div className="dashboard-page">
       {/* Metrics Header */}
       <Grid narrow className="metrics-grid">
-        <Column lg={4} md={2} sm={4}>
+        <Column lg={3} md={2} sm={2}>
           <Tile className="metric-tile">
             <DashboardIcon size={24} className="metric-icon" />
             <div className="metric-content">
@@ -154,7 +154,7 @@ const Dashboard = ({ portfolio, onUpdateTolerancePct }) => {
           </Tile>
         </Column>
         
-        <Column lg={4} md={2} sm={4}>
+        <Column lg={3} md={2} sm={2}>
           <Tile className="metric-tile">
             <ChartBullet size={24} className="metric-icon" />
             <div className="metric-content">
@@ -166,7 +166,7 @@ const Dashboard = ({ portfolio, onUpdateTolerancePct }) => {
           </Tile>
         </Column>
 
-        <Column lg={4} md={2} sm={4}>
+        <Column lg={4} md={2} sm={2}>
           <Tile className="metric-tile">
             <Analytics size={24} className="metric-icon" />
             <div className="metric-content">
@@ -176,7 +176,7 @@ const Dashboard = ({ portfolio, onUpdateTolerancePct }) => {
           </Tile>
         </Column>
 
-        <Column lg={4} md={2} sm={4}>
+        <Column lg={4} md={2} sm={2}>
           <Tile className="metric-tile">
             <Collaborate size={24} className="metric-icon" />
             <div className="metric-content">
@@ -187,9 +187,9 @@ const Dashboard = ({ portfolio, onUpdateTolerancePct }) => {
         </Column>
       </Grid>
 
-      <Grid>
+      <Grid narrow>
         {/* Tolerance Setting */}
-        <Column lg={16} md={8} sm={4}>
+        <Column lg={14} md={8} sm={4}>
           <Tile className="dashboard-tile">
             <div className="tile-header">
               <h4>Tolerance Band</h4>
@@ -287,7 +287,7 @@ const Dashboard = ({ portfolio, onUpdateTolerancePct }) => {
         </Column>
 
         {/* Rebalance Suggestions */}
-        <Column lg={16} md={8} sm={4}>
+        <Column lg={14} md={8} sm={4}>
           <Tile className="dashboard-tile">
             <div className="tile-header">
               <h4>Rebalance Suggestions</h4>

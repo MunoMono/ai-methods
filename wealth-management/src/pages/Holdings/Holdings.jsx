@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import {
+  Grid,
+  Column,
   DataTable,
   TableContainer,
   Table,
@@ -56,18 +58,22 @@ const Holdings = ({ portfolio, onUpdateHolding, onDeleteHolding, onAddHolding })
 
   return (
     <div className="holdings-page">
-      <div className="holdings-header">
-        <h3>Holdings Editor</h3>
-        <Button
-          renderIcon={Add}
-          onClick={handleAddHolding}
-          size="sm"
-        >
-          Add Holding
-        </Button>
-      </div>
+      <Grid narrow>
+        <Column lg={14} md={8} sm={4}>
+          <div className="holdings-header">
+            <h3>Holdings Editor</h3>
+            <Button
+              renderIcon={Add}
+              onClick={handleAddHolding}
+              size="sm"
+            >
+              Add Holding
+            </Button>
+          </div>
+        </Column>
 
-      <DataTable rows={portfolio.holdings} headers={headers}>
+        <Column lg={14} md={8} sm={4}>
+          <DataTable rows={portfolio.holdings} headers={headers}>
         {({ rows, headers, getHeaderProps, getTableProps }) => (
           <TableContainer>
             <Table {...getTableProps()} className="holdings-table">
@@ -175,6 +181,8 @@ const Holdings = ({ portfolio, onUpdateHolding, onDeleteHolding, onAddHolding })
           </TableContainer>
         )}
       </DataTable>
+        </Column>
+      </Grid>
     </div>
   );
 };
