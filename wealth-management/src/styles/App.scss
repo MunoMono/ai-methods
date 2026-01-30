@@ -1,0 +1,6 @@
+@use '@carbon/react';
+
+.app-content {
+  min-height: calc(100vh - 3rem);
+  background-color: var(--cds-background);
+}

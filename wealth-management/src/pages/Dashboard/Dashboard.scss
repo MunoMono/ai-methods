@@ -1,0 +1,18 @@
+.dashboard-page {
+  .page-header {
+    padding: $spacing-07 0 $spacing-05;
+    border-bottom: 1px solid var(--cds-border-subtle);
+    margin-bottom: $spacing-07;
+  }
+
+  .page-title {
+    font-size: 2.625rem;
+    font-weight: 300;
+    letter-spacing: 0;
+    line-height: 1.199;
+  }
+
+  .dashboard-content {
+    padding: $spacing-05;
+  }
+}

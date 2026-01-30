@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  wealth-management-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wealth-management-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+      - "4431:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - wealth-management-network
+
+networks:
+  wealth-management-network:
+    driver: bridge
