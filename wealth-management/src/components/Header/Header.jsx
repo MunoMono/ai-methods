@@ -43,6 +43,12 @@ const Header = ({ currentTheme, onThemeToggle, activeTab, onTabChange }) => {
         >
           Import/Export
         </HeaderMenuItem>
+        <HeaderMenuItem
+          onClick={() => onTabChange('prices')}
+          isCurrentPage={activeTab === 'prices'}
+        >
+          Stock Prices
+        </HeaderMenuItem>
       </HeaderNavigation>
       <HeaderGlobalBar>
         <HeaderGlobalAction

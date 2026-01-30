@@ -7,6 +7,7 @@ import Header from './components/Header/Header'
 import Dashboard from './pages/Dashboard/Dashboard'
 import Holdings from './pages/Holdings/Holdings'
 import Import from './pages/Import/Import'
+import StockPrices from './pages/StockPrices/StockPrices'
 import LoginPage from './components/Auth/LoginPage'
 import { DEFAULT_PORTFOLIO } from './utils/defaultPortfolio'
 import { loadPortfolio, savePortfolio, resetPortfolio } from './utils/localStorage'
@@ -111,38 +112,6 @@ function App() {
           onTabChange={setActiveTab}
         />
         <div className="app-content">
-          {/* Portfolio Summary Header */}
-          <div className="portfolio-header">
-            <div className="portfolio-info">
-              <h2>{portfolio.portfolioName}</h2>
-              <div className="portfolio-stats">
-                <span className="stat-label">Base Currency:</span>
-                <span className="stat-value">{portfolio.baseCurrency}</span>
-                <span className="stat-separator">|</span>
-                <span className="stat-label">Total Value:</span>
-                <span className="stat-value">{formatCurrency(totalCurrent, portfolio.baseCurrency)}</span>
-              </div>
-            </div>
-            <div className="portfolio-actions">
-              <Button
-                kind="tertiary"
-                renderIcon={Download}
-                onClick={handleExport}
-                size="sm"
-              >
-                Export CSV
-              </Button>
-              <Button
-                kind="tertiary"
-                renderIcon={Reset}
-                onClick={handleReset}
-                size="sm"
-              >
-                Reset
-              </Button>
-            </div>
-          </div>
-
           {/* Page Content */}
           <div className="tab-content" style={{ minHeight: 'calc(100vh - 3rem)' }}>
             {activeTab === 'dashboard' && (
@@ -163,6 +132,11 @@ function App() {
               <Import
                 portfolio={portfolio}
                 onImportPortfolio={handleImportPortfolio}
+              />
+            )}
+            {activeTab === 'prices' && (
+              <StockPrices
+                portfolio={portfolio}
               />
             )}
           </div>

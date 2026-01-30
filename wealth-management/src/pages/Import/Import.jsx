@@ -47,7 +47,7 @@ const Import = ({ portfolio, onImportPortfolio }) => {
   };
 
   return (
-    <div className="import-page">
+    <div className="import-page" style={{ padding: '2rem', background: '#262626', minHeight: '100vh' }}>
       <Grid narrow>
         {notification && (
           <Column lg={14} md={8} sm={4}>

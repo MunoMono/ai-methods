@@ -57,15 +57,26 @@ const Holdings = ({ portfolio, onUpdateHolding, onDeleteHolding, onAddHolding })
   };
 
   return (
-    <div className="holdings-page">
+    <div className="holdings-page" style={{ padding: '2rem', background: '#262626', minHeight: '100vh' }}>
       <Grid narrow>
         <Column lg={14} md={8} sm={4}>
-          <div className="holdings-header">
-            <h3>Holdings Editor</h3>
+          <div className="holdings-header" style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '2rem',
+            padding: '1.5rem',
+            background: '#393939',
+            borderLeft: '4px solid #0f62fe'
+          }}>
+            <div>
+              <h3 style={{ margin: 0, color: '#f4f4f4', fontSize: '1.75rem', fontWeight: 400 }}>Holdings Editor</h3>
+              <p style={{ margin: '0.5rem 0 0 0', color: '#c6c6c6', fontSize: '0.875rem' }}>{portfolio.holdings.length} holdings across {portfolio.sleeves.length} sleeves</p>
+            </div>
             <Button
               renderIcon={Add}
               onClick={handleAddHolding}
-              size="sm"
+              size="lg"
             >
               Add Holding
             </Button>
