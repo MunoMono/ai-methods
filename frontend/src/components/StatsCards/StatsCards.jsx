@@ -192,7 +192,7 @@ const StatsCards = () => {
                   <div style={{ fontWeight: '600', marginBottom: '4px' }}>PID authorities (provenance):</div>
                   {pidAuthorities.map((auth, idx) => (
                     <div key={idx} style={{ marginLeft: '8px', marginBottom: '2px', fontFamily: 'monospace' }}>
-                      • {auth.title} | {auth.pid}
+                      – {auth.title} | {auth.pid}
                       <span style={{ marginLeft: '8px', color: 'var(--cds-text-helper)', fontSize: '0.7rem' }}>
                         ({auth.pdfCount || 0} PDFs, {auth.tiffCount || 0} TIFFs)
                       </span>
@@ -205,7 +205,7 @@ const StatsCards = () => {
                   <div style={{ fontWeight: '600', marginBottom: '4px' }}>Recent items (past week):</div>
                   {recentDocs.map((doc, idx) => (
                     <div key={idx} style={{ marginLeft: '8px', marginBottom: '2px' }}>
-                      • {doc.title} <span style={{ opacity: 0.6 }}>({doc.pid})</span>
+                      – {doc.title} <span style={{ opacity: 0.6 }}>({doc.pid})</span>
                     </div>
                   ))}
                 </div>
