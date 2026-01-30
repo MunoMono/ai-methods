@@ -56,7 +56,7 @@ const Dashboard = () => {
                   )}
                 </div>
                 <h2 className="dashboard__granite-hero-title">
-                  Enterprise AI for Academic Research
+                  Enterprise AI for academic research
                 </h2>
                 <p className="dashboard__granite-hero-description">
                   IBM Granite is a family of open, performant, and trusted AI models purpose-built for business and optimized for 
@@ -94,7 +94,7 @@ const Dashboard = () => {
         </Column>
 
         <Column lg={16} md={8} sm={4}>
-          <h2 className="dashboard__section-title">System Metrics</h2>
+          <h2 className="dashboard__section-title">System metrics</h2>
         </Column>
         
         <Column lg={16} md={8} sm={4}>
@@ -115,7 +115,7 @@ const Dashboard = () => {
         </Column>
 
         <Column lg={16} md={8} sm={4}>
-          <h2 className="dashboard__section-title">Research Tools</h2>
+          <h2 className="dashboard__section-title">Research tools</h2>
         </Column>
 
         <Column lg={8} md={4} sm={4}>
@@ -123,7 +123,7 @@ const Dashboard = () => {
             <div className="dashboard__tile-icon">
               <ChartNetwork size={32} />
             </div>
-            <h3>Evidence Tracer</h3>
+            <h3>Evidence tracer</h3>
             <p>Trace predictions to archival sources with formal citations. Full provenance: Embeddings → Chunks → PIDs → DDR Archive</p>
           </ClickableTile>
         </Column>
@@ -133,7 +133,7 @@ const Dashboard = () => {
             <div className="dashboard__tile-icon">
               <Recording size={32} />
             </div>
-            <h3>Session Recorder</h3>
+            <h3>Session recorder</h3>
             <p>Inference logging for XAI. Every prediction attributed to source chunks for supervisor validation</p>
           </ClickableTile>
         </Column>
@@ -143,7 +143,7 @@ const Dashboard = () => {
             <div className="dashboard__tile-icon">
               <Chemistry size={32} />
             </div>
-            <h3>Experimental Log</h3>
+            <h3>Experimental log</h3>
             <p>IBM Granite training runs with provenance. Track which PIDs trained which model for reproducibility</p>
           </ClickableTile>
         </Column>
@@ -153,37 +153,37 @@ const Dashboard = () => {
             <div className="dashboard__tile-icon">
               <DataVis_1 size={32} />
             </div>
-            <h3>Temporal Analysis</h3>
+            <h3>Temporal analysis</h3>
             <p>Monitor epistemic drift patterns and model behavior changes</p>
           </Tile>
         </Column>
 
         <Column lg={16} md={8} sm={4}>
           <Tile className="dashboard__chart-tile">
-            <h3 className="dashboard__chart-title">Temporal Drift Analysis</h3>
+            <h3 className="dashboard__chart-title">Temporal drift analysis</h3>
             <TemporalDriftChart />
           </Tile>
         </Column>
 
         <Column lg={16} md={8} sm={4}>
           <div className="dashboard__info-section">
-            <h2 className="dashboard__section-title">System Architecture</h2>
+            <h2 className="dashboard__section-title">System architecture</h2>
             <Grid condensed>
               <Column lg={5} md={8} sm={4}>
                 <Tile className="dashboard__info-tile">
-                  <h4>Ingestion Layer</h4>
+                  <h4>Ingestion layer</h4>
                   <p>PID-gated allowlist: GraphQL sync + S3 validation + Docling OCR (PDF/TIFF)</p>
                 </Tile>
               </Column>
               <Column lg={5} md={8} sm={4}>
                 <Tile className="dashboard__info-tile">
-                  <h4>NLP Layer</h4>
+                  <h4>NLP layer</h4>
                   <p>BERT embeddings (384-dim) + IBM Granite fine-tuning + pgvector similarity search</p>
                 </Tile>
               </Column>
               <Column lg={6} md={8} sm={4}>
                 <Tile className="dashboard__info-tile">
-                  <h4>Provenance Layer</h4>
+                  <h4>Provenance layer</h4>
                   <p>Training runs + inference logs + corpus snapshots + formal citations</p>
                 </Tile>
               </Column>

@@ -18,7 +18,7 @@ const EvidenceTracer = () => {
       <Column lg={16} md={8} sm={4}>
         <div className="tracer__header">
           <div>
-            <h1>Evidence Tracer</h1>
+            <h1>Evidence tracer</h1>
             <p className="tracer__description">
               Trace AI predictions back to archival sources with formal citations. 
               Full provenance chain: Query → Embeddings → Chunks → PIDs → DDR Archive
@@ -33,7 +33,7 @@ const EvidenceTracer = () => {
       <Column lg={12} md={6} sm={4}>
         <TextInput
           id="query-input"
-          labelText="Research Query"
+          labelText="Research query"
           placeholder="Enter a question to trace the agent's reasoning..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -46,7 +46,7 @@ const EvidenceTracer = () => {
           onClick={handleTrace}
           disabled={!query.trim()}
         >
-          Trace Evidence
+          Trace evidence
         </Button>
       </Column>
 

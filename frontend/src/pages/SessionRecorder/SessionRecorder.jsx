@@ -25,7 +25,7 @@ const SessionRecorder = () => {
       <Column lg={16} md={8} sm={4}>
         <div className="recorder__header">
           <div>
-            <h1>Session Recorder</h1>
+            <h1>Session recorder</h1>
             <p className="recorder__description">
               Inference logging for explainable AI. 
               Every prediction links to source chunks for manual validation by supervisors.
@@ -40,7 +40,7 @@ const SessionRecorder = () => {
       <Column lg={16} md={8} sm={4}>
         <DataTable rows={rows} headers={headers}>
           {({ rows, headers, getTableProps, getHeaderProps, getRowProps }) => (
-            <TableContainer title="Recent Sessions">
+            <TableContainer title="Recent sessions">
               <Table {...getTableProps()}>
                 <TableHead>
                   <TableRow>

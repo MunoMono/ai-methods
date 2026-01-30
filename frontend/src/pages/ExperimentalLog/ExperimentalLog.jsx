@@ -9,28 +9,28 @@ const ExperimentalLog = () => {
       <Column lg={16} md={8} sm={4}>
         <div className="log__header">
           <div>
-            <h1>Experimental Log</h1>
+            <h1>Experimental log</h1>
             <p className="log__description">
               IBM Granite fine-tuning runs with complete provenance. 
               Track which PIDs trained which model version for reproducibility.
             </p>
           </div>
           <Tag type="purple" size="md">
-            <Chemistry size={16} /> Training Runs
+            <Chemistry size={16} /> Training runs
           </Tag>
         </div>
       </Column>
 
       <Column lg={16} md={8} sm={4}>
         <Tile className="log__chart-tile">
-          <h3>Training Loss Curves</h3>
+          <h3>Training loss curves</h3>
           <TrainingMetricsChart />
         </Tile>
       </Column>
 
       <Column lg={16} md={8} sm={4}>
         <Tile>
-          <h3>Training Run Provenance</h3>
+          <h3>Training run provenance</h3>
           <p className="log__note">
             Connects to <code>/api/provenance/training/*</code> endpoints to display:
             <br/>• Which PIDs were used in each training run

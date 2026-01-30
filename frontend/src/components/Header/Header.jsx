@@ -29,7 +29,7 @@ const Header = ({ currentTheme, onThemeToggle }) => {
     <CarbonHeader aria-label="Epistemic Drift Research">
       <SkipToContent />
       <HeaderName href="#" prefix="RCA PhD" onClick={(e) => { e.preventDefault(); navigate('/') }}>
-        {isAuthenticated ? user.name : 'Graham Newman'}
+        Graham Newman
       </HeaderName>
       <HeaderNavigation aria-label="Research Navigation">
         <HeaderMenuItem
@@ -42,19 +42,19 @@ const Header = ({ currentTheme, onThemeToggle }) => {
           onClick={() => navigate('/tracer')}
           isCurrentPage={location.pathname === '/tracer'}
         >
-          Evidence Tracer
+          Evidence tracer
         </HeaderMenuItem>
         <HeaderMenuItem
           onClick={() => navigate('/sessions')}
           isCurrentPage={location.pathname === '/sessions'}
         >
-          Session Recorder
+          Session recorder
         </HeaderMenuItem>
         <HeaderMenuItem
           onClick={() => navigate('/experiments')}
           isCurrentPage={location.pathname === '/experiments'}
         >
-          Experimental Log
+          Experimental log
         </HeaderMenuItem>
       </HeaderNavigation>
       <HeaderGlobalBar>
