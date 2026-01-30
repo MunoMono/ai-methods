@@ -117,7 +117,7 @@ class PIDMediaCountService:
         
         return results
     
-    def update_database_media_counts(self, pid: str, pdf_count: int, tiff_count: int):
+    def update_database_media_counts(self, pid: str, pdf_count: int, tiff_count: int, db=None):
         """
         Update documents table with media counts for a PID
         
@@ -125,11 +125,16 @@ class PIDMediaCountService:
             pid: The PID to update
             pdf_count: Number of PDF files
             tiff_count: Number of TIFF files
+            db: Optional database session (if None, creates new one)
         """
         from app.core.database import LocalSessionLocal
         from sqlalchemy import text
         
-        db = LocalSessionLocal()
+        close_session = False
+        if db is None:
+            db = LocalSessionLocal()
+            close_session = True
+        
         try:
             # Update all documents with this PID
             result = db.execute(
@@ -153,12 +158,17 @@ class PIDMediaCountService:
         except Exception as e:
             db.rollback()
             logger.error(f"Error updating media counts for PID {pid}: {e}")
+            raise
         finally:
-            db.close()
+            if close_session:
+                db.close()
     
-    def sync_all_pid_media_counts(self) -> Dict[str, any]:
+    def sync_all_pid_media_counts(self, db=None) -> Dict[str, any]:
         """
         Query all PIDs in database and update their media counts
+        
+        Args:
+            db: Optional database session (if None, creates new one)
         
         Returns:
             Summary statistics
@@ -166,7 +176,11 @@ class PIDMediaCountService:
         from app.core.database import LocalSessionLocal
         from sqlalchemy import text
         
-        db = LocalSessionLocal()
+        close_session = False
+        if db is None:
+            db = LocalSessionLocal()
+            close_session = True
+        
         try:
             # Get all unique PIDs
             result = db.execute(text(
@@ -190,7 +204,8 @@ class PIDMediaCountService:
                     self.update_database_media_counts(
                         pid, 
                         counts['pdf_count'], 
-                        counts['tiff_count']
+                        counts['tiff_count'],
+                        db=db
                     )
                     
                     stats['pids_processed'] += 1
@@ -204,6 +219,7 @@ class PIDMediaCountService:
             
         except Exception as e:
             logger.error(f"Error syncing all PID media counts: {e}")
-            return {'error': str(e)}
+            raise
         finally:
-            db.close()
+            if close_session:
+                db.close()

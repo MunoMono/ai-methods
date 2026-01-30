@@ -3,13 +3,15 @@ Sync endpoints - trigger document sync from various sources
 Includes GraphQL DDR Archive sync and S3 Spaces sync
 """
 import logging
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Header
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Header, Depends
 from typing import Optional, List
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from app.services.s3_sync import S3SyncService
 from app.services.graphql_sync import GraphQLSyncService
 from app.services.pid_media_count import PIDMediaCountService
+from app.core.database import get_local_db
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -218,7 +220,7 @@ async def sync_history(limit: int = 20):
 
 
 @router.post("/media-counts")
-async def sync_media_counts():
+async def sync_media_counts(db: Session = Depends(get_local_db)):
     """
     Query DDR Archive GraphQL API for media asset counts (PDFs + TIFFs)
     attached to each PID authority. This provides provenance tracking for
@@ -230,7 +232,7 @@ async def sync_media_counts():
     try:
         logger.info("Syncing media counts for all PIDs...")
         
-        stats = pid_media_service.sync_all_pid_media_counts()
+        stats = pid_media_service.sync_all_pid_media_counts(db=db)
         
         if 'error' in stats:
             raise HTTPException(status_code=500, detail=stats['error'])
