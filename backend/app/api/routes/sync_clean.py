@@ -9,14 +9,12 @@ from datetime import datetime
 
 from app.services.s3_sync import S3SyncService
 from app.services.graphql_sync import GraphQLSyncService
-from app.services.pid_media_count import PIDMediaCountService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 s3_sync_service = S3SyncService()
 graphql_sync_service = GraphQLSyncService()
-pid_media_service = PIDMediaCountService()
 
 
 @router.post("/s3/trigger")
@@ -58,7 +56,6 @@ async def scheduled_authority_sync(
     Scheduled sync endpoint for cron jobs
     
     Security: Requires API key header
-    Triggered by: Daily cron job at 2 AM
     """
     # TODO: Add API key validation when settings.SYNC_API_KEY is configured
     # if x_api_key != settings.SYNC_API_KEY:
@@ -93,9 +90,6 @@ async def manual_authority_sync(
     
     Args:
         incremental: If True, only sync new records since last sync
-    
-    Returns:
-        Sync operation summary
     """
     logger.info(f"Starting manual authority sync (incremental={incremental})...")
     
@@ -150,12 +144,7 @@ async def sync_status():
 
 @router.get("/s3/list-pdfs")
 async def list_pdfs():
-    """
-    List all PDFs in S3 bucket with metadata
-    
-    Returns:
-        List of PDFs with filenames, sizes, publication years
-    """
+    """List all PDFs in S3 bucket with metadata"""
     pdfs = s3_sync_service.list_pdfs_in_bucket()
     
     return {
@@ -193,80 +182,24 @@ async def sync_history(limit: int = 20):
             text("SELECT * FROM sync_log ORDER BY sync_started_at DESC LIMIT :limit"),
             {'limit': limit}
         )
-        syncs = []
-        for row in result.fetchall():
-            syncs.append({
-                'sync_id': row[0],
-                'source_system': row[1],
-                'sync_started_at': row[2].isoformat() if row[2] else None,
-                'sync_completed_at': row[3].isoformat() if row[3] else None,
-                'status': row[4],
-                'records_processed': row[5],
-                'records_added': row[6],
-                'records_updated': row[7],
-                'records_failed': row[8],
-                'triggered_by': row[9],
-                'error_log': row[10]
-            })
+        syncs = [dict(row._mapping) for row in result.fetchall()]
         
         return {
             'count': len(syncs),
-            'syncs': syncs
+            'syncs': [
+                {
+                    'sync_id': s['sync_id'],
+                    'source_system': s['source_system'],
+                    'sync_started_at': s['sync_started_at'].isoformat() if s.get('sync_started_at') else None,
+                    'sync_completed_at': s['sync_completed_at'].isoformat() if s.get('sync_completed_at') else None,
+                    'status': s['status'],
+                    'records_processed': s['records_processed'],
+                    'new_records': s['new_records'],
+                    'updated_records': s['updated_records'],
+                    'triggered_by': s['triggered_by']
+                }
+                for s in syncs
+            ]
         }
     finally:
         db.close()
-
-
-@router.post("/media-counts")
-async def sync_media_counts():
-    """
-    Query DDR Archive GraphQL API for media asset counts (PDFs + TIFFs)
-    attached to each PID authority. This provides provenance tracking for
-    what Docling will ingest.
-    
-    Returns:
-        Summary of media counts updated
-    """
-    try:
-        logger.info("Syncing media counts for all PIDs...")
-        
-        stats = pid_media_service.sync_all_pid_media_counts()
-        
-        if 'error' in stats:
-            raise HTTPException(status_code=500, detail=stats['error'])
-        
-        return {
-            'status': 'success',
-            'message': f"Updated media counts for {stats['pids_processed']} PIDs",
-            'stats': stats
-        }
-        
-    except Exception as e:
-        logger.error(f"Error syncing media counts: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/media-counts/{pid}")
-async def get_media_count_for_pid(pid: str):
-    """
-    Get media asset counts for a specific PID
-    
-    Args:
-        pid: The PID to query (e.g., "124881079617")
-    
-    Returns:
-        Dict with pdf_count, tiff_count, total_count
-    """
-    try:
-        counts = pid_media_service.get_media_counts_for_pid(pid)
-        
-        return {
-            'pid': pid,
-            'pdf_count': counts['pdf_count'],
-            'tiff_count': counts['tiff_count'],
-            'total_media_count': counts['total_count']
-        }
-        
-    except Exception as e:
-        logger.error(f"Error getting media count for PID {pid}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))

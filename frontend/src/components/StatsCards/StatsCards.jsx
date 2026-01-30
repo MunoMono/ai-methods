@@ -49,6 +49,9 @@ const StatsCards = () => {
               pid
               title
               documentCount
+              pdfCount
+              tiffCount
+              totalMediaCount
             }
           }
           recentDocuments(days: 7) {
@@ -184,10 +187,13 @@ const StatsCards = () => {
               <Tag type="blue" size="sm">{formatNumber(stats?.local_table_counts?.documents || 0)} docs ingested</Tag>
               {pidAuthorities.length > 0 && (
                 <div className="stats-card__recent" style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
-                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>PID authorities:</div>
+                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>PID authorities (provenance):</div>
                   {pidAuthorities.map((auth, idx) => (
                     <div key={idx} style={{ marginLeft: '8px', marginBottom: '2px', fontFamily: 'monospace' }}>
                       • {auth.title} | {auth.pid}
+                      <span style={{ marginLeft: '8px', color: 'var(--cds-text-helper)', fontSize: '0.7rem' }}>
+                        ({auth.pdfCount || 0} PDFs, {auth.tiffCount || 0} TIFFs)
+                      </span>
                     </div>
                   ))}
                 </div>

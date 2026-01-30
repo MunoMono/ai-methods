@@ -1,0 +1,209 @@
+"""
+PID Media Count Service - Query DDR Archive GraphQL API for media asset counts
+
+This service queries the DDR Archive GraphQL API to get counts of PDF and TIFF
+files attached to each PID authority. This provides provenance tracking for
+what will be ingested by Docling.
+"""
+import logging
+import requests
+from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
+
+
+class PIDMediaCountService:
+    """Query DDR Archive GraphQL API for media asset counts per PID"""
+    
+    def __init__(self, graphql_endpoint: str = "https://api.ddrarchive.org/graphql"):
+        self.graphql_endpoint = graphql_endpoint
+    
+    def get_media_counts_for_pid(self, pid: str) -> Dict[str, int]:
+        """
+        Query DDR Archive GraphQL API for media counts for a specific PID
+        
+        Args:
+            pid: The PID to query (e.g., "124881079617")
+        
+        Returns:
+            Dict with pdf_count, tiff_count, total_count
+        """
+        query = """
+        query GetMediaForPID($pid: String!) {
+            mediaItemsByPID(pid: $pid) {
+                id
+                pid
+                title
+                pdf_files {
+                    id
+                    filename
+                    url
+                }
+                tiff_files {
+                    id
+                    filename
+                    url
+                }
+            }
+        }
+        """
+        
+        try:
+            response = requests.post(
+                self.graphql_endpoint,
+                json={
+                    'query': query,
+                    'variables': {'pid': pid}
+                },
+                headers={'Content-Type': 'application/json'},
+                timeout=10
+            )
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # Handle errors in GraphQL response
+            if 'errors' in data:
+                logger.error(f"GraphQL errors for PID {pid}: {data['errors']}")
+                return {'pdf_count': 0, 'tiff_count': 0, 'total_count': 0}
+            
+            # Parse response
+            media_items = data.get('data', {}).get('mediaItemsByPID', [])
+            
+            if not media_items:
+                logger.warning(f"No media items found for PID {pid}")
+                return {'pdf_count': 0, 'tiff_count': 0, 'total_count': 0}
+            
+            # Count media assets across all items with this PID
+            total_pdfs = 0
+            total_tiffs = 0
+            
+            for item in media_items:
+                pdf_files = item.get('pdf_files', [])
+                tiff_files = item.get('tiff_files', [])
+                total_pdfs += len(pdf_files)
+                total_tiffs += len(tiff_files)
+            
+            result = {
+                'pdf_count': total_pdfs,
+                'tiff_count': total_tiffs,
+                'total_count': total_pdfs + total_tiffs
+            }
+            
+            logger.info(f"PID {pid}: {result['pdf_count']} PDFs, {result['tiff_count']} TIFFs")
+            return result
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"HTTP error querying DDR Archive for PID {pid}: {e}")
+            return {'pdf_count': 0, 'tiff_count': 0, 'total_count': 0}
+        except Exception as e:
+            logger.error(f"Unexpected error querying media counts for PID {pid}: {e}")
+            return {'pdf_count': 0, 'tiff_count': 0, 'total_count': 0}
+    
+    def get_media_counts_bulk(self, pids: List[str]) -> Dict[str, Dict[str, int]]:
+        """
+        Get media counts for multiple PIDs
+        
+        Args:
+            pids: List of PID strings
+        
+        Returns:
+            Dict mapping PID -> {pdf_count, tiff_count, total_count}
+        """
+        results = {}
+        
+        for pid in pids:
+            results[pid] = self.get_media_counts_for_pid(pid)
+        
+        return results
+    
+    def update_database_media_counts(self, pid: str, pdf_count: int, tiff_count: int):
+        """
+        Update documents table with media counts for a PID
+        
+        Args:
+            pid: The PID to update
+            pdf_count: Number of PDF files
+            tiff_count: Number of TIFF files
+        """
+        from app.core.database import LocalSessionLocal
+        from sqlalchemy import text
+        
+        db = LocalSessionLocal()
+        try:
+            # Update all documents with this PID
+            result = db.execute(
+                text("""
+                    UPDATE documents 
+                    SET pdf_count = :pdf_count, 
+                        tiff_count = :tiff_count
+                    WHERE pid = :pid
+                """),
+                {
+                    'pid': pid,
+                    'pdf_count': pdf_count,
+                    'tiff_count': tiff_count
+                }
+            )
+            db.commit()
+            
+            rows_updated = result.rowcount
+            logger.info(f"Updated {rows_updated} documents for PID {pid} with media counts")
+            
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error updating media counts for PID {pid}: {e}")
+        finally:
+            db.close()
+    
+    def sync_all_pid_media_counts(self) -> Dict[str, any]:
+        """
+        Query all PIDs in database and update their media counts
+        
+        Returns:
+            Summary statistics
+        """
+        from app.core.database import LocalSessionLocal
+        from sqlalchemy import text
+        
+        db = LocalSessionLocal()
+        try:
+            # Get all unique PIDs
+            result = db.execute(text(
+                "SELECT DISTINCT pid FROM documents WHERE pid IS NOT NULL"
+            ))
+            pids = [row[0] for row in result.fetchall()]
+            
+            logger.info(f"Syncing media counts for {len(pids)} PIDs...")
+            
+            stats = {
+                'pids_processed': 0,
+                'total_pdfs': 0,
+                'total_tiffs': 0,
+                'errors': 0
+            }
+            
+            for pid in pids:
+                counts = self.get_media_counts_for_pid(pid)
+                
+                if counts['total_count'] > 0:
+                    self.update_database_media_counts(
+                        pid, 
+                        counts['pdf_count'], 
+                        counts['tiff_count']
+                    )
+                    
+                    stats['pids_processed'] += 1
+                    stats['total_pdfs'] += counts['pdf_count']
+                    stats['total_tiffs'] += counts['tiff_count']
+                else:
+                    stats['errors'] += 1
+            
+            logger.info(f"Media count sync complete: {stats}")
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Error syncing all PID media counts: {e}")
+            return {'error': str(e)}
+        finally:
+            db.close()

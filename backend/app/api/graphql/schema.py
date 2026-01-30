@@ -116,6 +116,9 @@ class PidAuthority:
     pid: str
     title: str
     document_count: int
+    pdf_count: int
+    tiff_count: int
+    total_media_count: int
 
 
 @strawberry.type
@@ -196,13 +199,16 @@ class Query:
             except:
                 pid_count = 0
             
-            # Get PID authorities with titles
+            # Get PID authorities with titles and media counts
             try:
                 result = db.execute(text("""
                     SELECT 
                         pid,
                         MAX(title) as title,
-                        COUNT(*) as document_count
+                        COUNT(*) as document_count,
+                        MAX(pdf_count) as pdf_count,
+                        MAX(tiff_count) as tiff_count,
+                        MAX(total_media_count) as total_media_count
                     FROM documents 
                     WHERE pid IS NOT NULL
                     GROUP BY pid
@@ -212,7 +218,10 @@ class Query:
                     PidAuthority(
                         pid=row[0],
                         title=row[1] or 'Untitled',
-                        document_count=row[2]
+                        document_count=row[2],
+                        pdf_count=row[3] or 0,
+                        tiff_count=row[4] or 0,
+                        total_media_count=row[5] or 0
                     )
                     for row in result.fetchall()
                 ]
