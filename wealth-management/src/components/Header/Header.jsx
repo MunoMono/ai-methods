@@ -38,6 +38,12 @@ const Header = ({ currentTheme, onThemeToggle, activeTab, onTabChange }) => {
           Holdings
         </HeaderMenuItem>
         <HeaderMenuItem
+          onClick={() => onTabChange('income')}
+          isCurrentPage={activeTab === 'income'}
+        >
+          Income Tracker
+        </HeaderMenuItem>
+        <HeaderMenuItem
           onClick={() => onTabChange('import')}
           isCurrentPage={activeTab === 'import'}
         >

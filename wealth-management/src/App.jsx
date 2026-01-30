@@ -6,6 +6,7 @@ import { Download, Reset } from '@carbon/icons-react'
 import Header from './components/Header/Header'
 import Dashboard from './pages/Dashboard/Dashboard'
 import Holdings from './pages/Holdings/Holdings'
+import Income from './pages/Income/Income'
 import Import from './pages/Import/Import'
 import StockPrices from './pages/StockPrices/StockPrices'
 import LoginPage from './components/Auth/LoginPage'
@@ -126,6 +127,11 @@ function App() {
                 onUpdateHolding={handleUpdateHolding}
                 onDeleteHolding={handleDeleteHolding}
                 onAddHolding={handleAddHolding}
+              />
+            )}
+            {activeTab === 'income' && (
+              <Income
+                portfolio={portfolio}
               />
             )}
             {activeTab === 'import' && (
