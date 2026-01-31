@@ -96,6 +96,10 @@ docker compose -f docker-compose.prod.yml build --no-cache
 echo "▶️  Starting application..."
 docker compose -f docker-compose.prod.yml up -d
 
+echo "🔒 Ensuring database password is synced..."
+sleep 5
+docker exec epistemic-drift-db psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';" 2>/dev/null || echo "Database password already correct or container not ready"
+
 echo "✅ Deployment complete!"
 echo ""
 echo "📊 Container status:"
