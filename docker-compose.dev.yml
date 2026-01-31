@@ -9,8 +9,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-epistemic_drift}
-    ports:
-      - "5432:5432"
+    # SECURITY: Do NOT expose database port - only accessible within Docker network
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql

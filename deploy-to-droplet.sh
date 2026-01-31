@@ -100,6 +100,23 @@ echo "🔒 Ensuring database password is synced..."
 sleep 5
 docker exec epistemic-drift-db psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';" 2>/dev/null || echo "Database password already correct or container not ready"
 
+echo "🔥 Configuring firewall..."
+if ! ufw status | grep -q "Status: active"; then
+    echo "y" | ufw enable
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw allow 22/tcp
+    ufw allow 80/tcp
+    ufw allow 443/tcp
+    ufw deny 5432/tcp
+    ufw deny 8000/tcp
+    ufw deny 9000/tcp
+    ufw reload
+    echo "✅ Firewall enabled and configured"
+else
+    echo "✅ Firewall already active"
+fi
+
 echo "✅ Deployment complete!"
 echo ""
 echo "📊 Container status:"
