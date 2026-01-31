@@ -1,5 +1,63 @@
 @use '@carbon/react/scss/theme' as *;
 @use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
 
 // Carbon UI Shell Header is styled by default
-// Only add custom overrides if needed
+// Custom responsive overrides for mobile/tablet
+
+// Mobile: Hide desktop navigation, show hamburger menu
+@media (max-width: 672px) {
+  .cds--header__nav {
+    display: none;
+  }
+  
+  .cds--header__menu-toggle {
+    display: flex;
+  }
+}
+
+// Tablet and up: Show desktop navigation, hide hamburger menu
+@media (min-width: 672px) {
+  .cds--header__nav {
+    display: flex;
+  }
+  
+  .cds--header__menu-toggle {
+    display: none;
+  }
+  
+  .mobile-nav {
+    display: none;
+  }
+}
+
+// Tablet breakpoint (672px - 1056px)
+@include breakpoint(md) {
+  .cds--header__nav {
+    flex: 1;
+  }
+  
+  .cds--header-panel {
+    width: 16rem;
+  }
+}
+
+// Desktop breakpoint (1056px+)
+@include breakpoint(lg) {
+  .cds--header__nav {
+    flex: 1;
+  }
+  
+  .cds--header-panel {
+    width: 20rem;
+  }
+}
+
+// Ensure proper z-index for overlays
+.cds--side-nav__overlay {
+  z-index: 6000;
+}
+
+.cds--side-nav {
+  z-index: 8000;
+}

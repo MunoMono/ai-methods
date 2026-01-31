@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
@@ -17,11 +18,12 @@ class Settings(BaseSettings):
     AUTH0_AUDIENCE: str = ""  # API identifier from Auth0 dashboard
     
     # Local Database (research data & vectors)
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str = "epistemic_drift"
+    # These will be read from environment variables first, then .env file, then use defaults
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
+    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
+    POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "epistemic_drift")
     
     @property
     def DATABASE_URL(self) -> str:
@@ -65,8 +67,12 @@ class Settings(BaseSettings):
     LOG_FILE: str = "logs/app.log"
     
     class Config:
+        # Read from .env file if it exists, but environment variables take precedence
         env_file = ".env"
+        env_file_encoding = "utf-8"
         case_sensitive = True
+        # Environment variables always override .env file values
+        extra = "ignore"
 
 
 settings = Settings()

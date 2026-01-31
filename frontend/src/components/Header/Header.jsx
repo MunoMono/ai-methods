@@ -3,9 +3,16 @@ import {
   HeaderName,
   HeaderNavigation,
   HeaderMenuItem,
+  HeaderMenuButton,
   HeaderGlobalBar,
   HeaderGlobalAction,
   HeaderPanel,
+  HeaderSideNavItems,
+  SideNav,
+  SideNavItems,
+  SideNavLink,
+  SideNavMenu,
+  SideNavMenuItem,
   Switcher,
   SwitcherItem,
   SwitcherDivider,
@@ -24,14 +31,26 @@ const Header = ({ currentTheme, onThemeToggle }) => {
   const isDark = currentTheme === 'g100'
   const [isArchiveSwitcherOpen, setIsArchiveSwitcherOpen] = useState(false)
   const [archiveView, setArchiveView] = useState(0)
+  const [isSideNavExpanded, setIsSideNavExpanded] = useState(false)
+
+  const handleNavClick = (path) => {
+    navigate(path)
+    setIsSideNavExpanded(false)
+  }
 
   return (
     <CarbonHeader aria-label="Epistemic Drift Research">
       <SkipToContent />
+      <HeaderMenuButton
+        aria-label={isSideNavExpanded ? 'Close menu' : 'Open menu'}
+        onClick={() => setIsSideNavExpanded(!isSideNavExpanded)}
+        isActive={isSideNavExpanded}
+        aria-expanded={isSideNavExpanded}
+      />
       <HeaderName href="#" prefix="RCA PhD" onClick={(e) => { e.preventDefault(); navigate('/') }}>
         Graham Newman
       </HeaderName>
-      <HeaderNavigation aria-label="Research Navigation">
+      <HeaderNavigation aria-label="Research Navigation" className="desktop-nav">
         <HeaderMenuItem
           onClick={() => navigate('/')}
           isCurrentPage={location.pathname === '/'}
@@ -131,6 +150,57 @@ const Header = ({ currentTheme, onThemeToggle }) => {
           </SwitcherItem>
         </Switcher>
       </HeaderPanel>
+      <SideNav
+        aria-label="Side navigation"
+        expanded={isSideNavExpanded}
+        onOverlayClick={() => setIsSideNavExpanded(false)}
+        className="mobile-nav"
+      >
+        <SideNavItems>
+          <SideNavLink
+            onClick={() => handleNavClick('/')}
+            isActive={location.pathname === '/'}
+          >
+            Dashboard
+          </SideNavLink>
+          <SideNavLink
+            onClick={() => handleNavClick('/tracer')}
+            isActive={location.pathname === '/tracer'}
+          >
+            Evidence tracer
+          </SideNavLink>
+          <SideNavLink
+            onClick={() => handleNavClick('/sessions')}
+            isActive={location.pathname === '/sessions'}
+          >
+            Session recorder
+          </SideNavLink>
+          <SideNavLink
+            onClick={() => handleNavClick('/experiments')}
+            isActive={location.pathname === '/experiments'}
+          >
+            Experimental log
+          </SideNavLink>
+          <SideNavMenu title="DDR Archive">
+            <SideNavMenuItem
+              onClick={() => {
+                setArchiveView(0)
+                setIsSideNavExpanded(false)
+              }}
+            >
+              DDR Public Archive
+            </SideNavMenuItem>
+            <SideNavMenuItem
+              onClick={() => {
+                setArchiveView(1)
+                setIsSideNavExpanded(false)
+              }}
+            >
+              DDR Archive Admin
+            </SideNavMenuItem>
+          </SideNavMenu>
+        </SideNavItems>
+      </SideNav>
     </CarbonHeader>
   )
 }

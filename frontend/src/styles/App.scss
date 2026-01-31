@@ -1,7 +1,29 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
 
 .app-content {
   min-height: calc(100vh - 3rem);
   background-color: $layer-01;
+  padding: 0;
+  
+  // Mobile: tighter padding
+  @media (max-width: 671px) {
+    padding: $spacing-05 $spacing-04;
+  }
+  
+  // Tablet: medium padding
+  @include breakpoint(md) {
+    padding: $spacing-06 $spacing-05;
+  }
+  
+  // Desktop: comfortable padding
+  @include breakpoint(lg) {
+    padding: $spacing-07 $spacing-06;
+  }
+  
+  // Extra large: maximum padding
+  @include breakpoint(xlg) {
+    padding: $spacing-08 $spacing-07;
+  }
 }
