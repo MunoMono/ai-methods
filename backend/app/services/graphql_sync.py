@@ -147,10 +147,13 @@ class GraphQLSyncService:
         # Support both old (all_media_items) and new (records_v1) response formats
         if 'data' in json_data and 'records_v1' in json_data['data']:
             all_items = json_data['data']['records_v1']
+            logger.info(f"Parsing records_v1 format: {len(all_items)} records")
         elif 'records_v1' in json_data:
             all_items = json_data['records_v1']
+            logger.info(f"Parsing records_v1 (no data wrapper): {len(all_items)} records")
         else:
             all_items = json_data.get('all_media_items', [])
+            logger.info(f"Parsing all_media_items format: {len(all_items)} items")
         
         training_eligible = []  # Has PDF or TIFF master
         jpg_only = []  # Has only JPG derivatives (masters should be in DO Spaces)
