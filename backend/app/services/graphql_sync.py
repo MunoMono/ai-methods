@@ -306,9 +306,13 @@ class GraphQLSyncService:
                 'scope_and_content': item.get('scope_and_content'),
                 'project_title': item.get('project_title'),
                 'creator_agent_label': item.get('creator_agent_label'),
-                # ML annotation metadata
-                'used_for_ml': master_file.get('used_for_ml', False),
-                'ml_annotation': master_file.get('ml_annotation', ''),
+                # ML annotation metadata (item level)
+                'used_for_ml': item.get('used_for_ml', False),
+                'ml_annotation': item.get('ml_annotation', ''),
+                # ML annotation metadata (digital asset level - has page annotations)
+                'asset_use_for_ml': master_file.get('use_for_ml', False),
+                'ml_pages': master_file.get('ml_pages', ''),
+                'asset_filename': master_file.get('filename', ''),
             }
             
             if dry_run:

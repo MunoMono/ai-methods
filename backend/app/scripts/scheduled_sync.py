@@ -45,7 +45,9 @@ query {
 def fetch_from_graphql():
     """Fetch all media items from DDR Archive GraphQL API"""
     try:
-        request_data = json.dumps({"query": GRAPHQL_QUERY}).encode()
+        query_payload = {"query": GRAPHQL_QUERY}
+        print(f"{datetime.now()} - Sending GraphQL query: {json.dumps(query_payload)[:500]}...")
+        request_data = json.dumps(query_payload).encode()
         req = urllib.request.Request(
             GRAPHQL_ENDPOINT,
             data=request_data,
