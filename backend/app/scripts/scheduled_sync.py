@@ -26,7 +26,7 @@ query {
       media {
         format_type
         full_file_type
-        use_for_ml
+        used_for_ml
         ml_pages
         ml_annotation
       }

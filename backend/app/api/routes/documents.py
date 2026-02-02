@@ -217,7 +217,7 @@ async def get_ml_annotations(document_id: str):
             "document_id": doc.document_id,
             "pid": doc.pid,
             "title": doc.title,
-            "use_for_ml": authority_data.get('use_for_ml', False),
+            "used_for_ml": authority_data.get('used_for_ml', False),
             "ml_pages": authority_data.get('ml_pages', ''),
             "ml_annotation": authority_data.get('ml_annotation', ''),
             "page_count": doc.page_count,

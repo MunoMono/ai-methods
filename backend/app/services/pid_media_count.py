@@ -41,8 +41,13 @@ class PIDMediaCountService:
                     pid
                     title
                     used_for_ml
+                    ml_annotation
+                    ml_pages
                     pdf_files {
                         filename
+                        use_for_ml
+                        ml_annotation
+                        ml_pages
                     }
                     jpg_derivatives {
                         filename
