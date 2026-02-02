@@ -166,16 +166,16 @@ class GraphQLSyncService:
             pid = item.get('pid')
             
             # Check for attached_media (records_v1 format) or direct pdf_files
-            attached_media = item.get('attached_media', [])
+            attached_media = item.get('attached_media') or []
             if attached_media:
                 # records_v1 format - process each attached media item
                 for media in attached_media:
                     media_pid = media.get('pid') or pid
-                    digital_assets = media.get('digital_assets', [])
+                    digital_assets = media.get('digital_assets') or []
                     
                     # Find PDF masters in digital_assets
-                    pdf_assets = [a for a in digital_assets if a.get('role') == 'pdf_master']
-                    tiff_assets = [a for a in digital_assets if a.get('role') == 'tiff_master']
+                    pdf_assets = [a for a in digital_assets if a and a.get('role') == 'pdf_master']
+                    tiff_assets = [a for a in digital_assets if a and a.get('role') == 'tiff_master']
                     
                     if pdf_assets:
                         training_eligible.append({
