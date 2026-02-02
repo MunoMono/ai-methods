@@ -139,12 +139,18 @@ class GraphQLSyncService:
         JPG derivatives are for web display only, not training
         
         Args:
-            json_data: GraphQL response with all_media_items
+            json_data: GraphQL response with records_v1 or all_media_items
         
         Returns:
             Dict with stats and categorized items
         """
-        all_items = json_data.get('all_media_items', [])
+        # Support both old (all_media_items) and new (records_v1) response formats
+        if 'data' in json_data and 'records_v1' in json_data['data']:
+            all_items = json_data['data']['records_v1']
+        elif 'records_v1' in json_data:
+            all_items = json_data['records_v1']
+        else:
+            all_items = json_data.get('all_media_items', [])
         
         training_eligible = []  # Has PDF or TIFF master
         jpg_only = []  # Has only JPG derivatives (masters should be in DO Spaces)
@@ -152,35 +158,57 @@ class GraphQLSyncService:
         
         for item in all_items:
             pid = item.get('pid')
-            has_pdf = len(item.get('pdf_files', [])) > 0
-            has_tiff = len(item.get('tiff_files', [])) > 0  # TIFF masters
-            has_jpg = len(item.get('jpg_derivatives', [])) > 0
             
-            if not pid:
-                logger.warning(f"Item {item.get('id')} has no PID - skipping")
-                continue
-            
-            if has_pdf:
-                # PDFs are training-eligible
-                training_eligible.append({
-                    'type': 'pdf',
-                    'item': item,
-                    'master_files': item.get('pdf_files', [])
-                })
-            elif has_tiff:
-                # TIFFs are training-eligible (rich visual historiography)
-                training_eligible.append({
-                    'type': 'tiff',
-                    'item': item,
-                    'master_files': item.get('tiff_files', [])
-                })
-            elif has_jpg:
-                # JPG-only (masters should be TIFFs in DO Spaces PID folder)
-                # Flag for manual review - TIFF masters may exist but not in GraphQL
-                jpg_only.append(item)
+            # Check for attached_media (records_v1 format) or direct pdf_files
+            attached_media = item.get('attached_media', [])
+            if attached_media:
+                # records_v1 format - process each attached media item
+                for media in attached_media:
+                    media_pid = media.get('pid') or pid
+                    digital_assets = media.get('digital_assets', [])
+                    
+                    # Find PDF masters in digital_assets
+                    pdf_assets = [a for a in digital_assets if a.get('role') == 'pdf_master']
+                    tiff_assets = [a for a in digital_assets if a.get('role') == 'tiff_master']
+                    
+                    if pdf_assets:
+                        training_eligible.append({
+                            'type': 'pdf',
+                            'item': {'pid': media_pid, 'title': media.get('title') or item.get('title')},
+                            'master_files': pdf_assets
+                        })
+                    elif tiff_assets:
+                        training_eligible.append({
+                            'type': 'tiff',
+                            'item': {'pid': media_pid, 'title': media.get('title') or item.get('title')},
+                            'master_files': tiff_assets
+                        })
             else:
-                # No media attachments
-                no_media.append(item)
+                # Old format fallback
+                has_pdf = len(item.get('pdf_files', [])) > 0
+                has_tiff = len(item.get('tiff_files', [])) > 0
+                has_jpg = len(item.get('jpg_derivatives', [])) > 0
+                
+                if not pid:
+                    logger.warning(f"Item {item.get('id')} has no PID - skipping")
+                    continue
+                
+                if has_pdf:
+                    training_eligible.append({
+                        'type': 'pdf',
+                        'item': item,
+                        'master_files': item.get('pdf_files', [])
+                    })
+                elif has_tiff:
+                    training_eligible.append({
+                        'type': 'tiff',
+                        'item': item,
+                        'master_files': item.get('tiff_files', [])
+                    })
+                elif has_jpg:
+                    jpg_only.append(item)
+                else:
+                    no_media.append(item)
         
         return {
             'total_items': len(all_items),
