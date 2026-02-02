@@ -158,8 +158,11 @@ class GraphQLSyncService:
             # Debug the fallback case
             logger.info(f"Checking condition: 'data' in json_data = {'data' in json_data}")
             if 'data' in json_data:
-                logger.info(f"json_data.get('data') = {json_data.get('data') is not None}")
-                if json_data.get('data'):
+                data_value = json_data.get('data')
+                logger.info(f"json_data.get('data') value: {data_value}")
+                logger.info(f"json_data.get('data') is None: {data_value is None}")
+                logger.info(f"json_data.get('data') is truthy: {bool(data_value)}")
+                if data_value:
                     logger.info(f"'records_v1' in json_data['data'] = {'records_v1' in json_data['data']}")
                     logger.info(f"json_data['data'] keys: {list(json_data['data'].keys())}")
             all_items = json_data.get('all_media_items', [])
