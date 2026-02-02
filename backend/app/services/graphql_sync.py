@@ -148,7 +148,7 @@ class GraphQLSyncService:
         logger.info(f"Received json_data keys: {list(json_data.keys())}")
         
         # Support both old (all_media_items) and new (records_v1) response formats
-        if 'data' in json_data and 'records_v1' in json_data['data']:
+        if 'data' in json_data and json_data.get('data') and 'records_v1' in json_data['data']:
             all_items = json_data['data']['records_v1']
             logger.info(f"Parsing records_v1 format: {len(all_items)} records")
         elif 'records_v1' in json_data:
