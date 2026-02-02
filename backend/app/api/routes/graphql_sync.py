@@ -14,6 +14,11 @@ router = APIRouter()
 sync_service = GraphQLSyncService()
 
 
+class SyncRequest(BaseModel):
+    """GraphQL sync request payload"""
+    graphql_response: dict
+
+
 class SyncStats(BaseModel):
     """Statistics from GraphQL sync operation"""
     total_items: int
@@ -38,7 +43,7 @@ class ValidationReport(BaseModel):
 
 @router.post("/sync/graphql", response_model=SyncStats)
 async def sync_from_graphql(
-    graphql_response: dict,
+    request: SyncRequest,
     dry_run: bool = True
 ):
     """
@@ -47,7 +52,7 @@ async def sync_from_graphql(
     CRITICAL: Only PID-linked PDF/TIFF assets are synced
     
     Args:
-        graphql_response: GraphQL all_media_items response
+        request: Request with graphql_response data
         dry_run: If True, don't actually insert to database (default: True for safety)
     
     Returns:
@@ -55,7 +60,7 @@ async def sync_from_graphql(
     """
     try:
         result = sync_service.bulk_sync_from_graphql_response(
-            graphql_response,
+            request.graphql_response,
             dry_run=dry_run
         )
         
