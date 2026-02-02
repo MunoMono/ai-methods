@@ -59,6 +59,10 @@ services:
         condition: service_healthy
     networks:
       - epistemic-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     restart: unless-stopped
 
   # React Frontend
