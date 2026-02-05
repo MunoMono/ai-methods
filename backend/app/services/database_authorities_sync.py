@@ -23,6 +23,7 @@ Usage:
 """
 
 import requests
+import json
 from sqlalchemy import text
 from app.core.database import LocalSessionLocal
 from app.core.logging import logger
@@ -300,7 +301,7 @@ def sync_authority(db, authority_type: str, config: dict):
                     "label": label,
                     "desc": description,
                     "cat": category,
-                    "meta": str(metadata) if metadata else "{}"
+                    "meta": json.dumps(metadata) if metadata else "{}"
                 }
             )
             synced_count += 1
