@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Grid, Column, Tile, SkeletonText, ProgressBar, Tag } from '@carbon/react'
-import { DataBase, CloudApp, Cube, Chemistry } from '@carbon/icons-react'
+import { DataBase, CloudApp, Cube, Chemistry, Archive, Tag as TagIcon } from '@carbon/icons-react'
 import '../../styles/components/StatsCards.scss'
 
 const StatsCards = () => {
@@ -55,6 +55,8 @@ const StatsCards = () => {
               mlTiffCount
               totalMediaCount
             }
+            coreAuthorities
+            criticalAuthorities
           }
           recentDocuments(days: 7) {
             pid
@@ -112,7 +114,9 @@ const StatsCards = () => {
         s3_pdfs: metrics.s3Storage.pdfs,
         s3_tiffs: metrics.s3Storage.tiffs || 0,
         total_items: metrics.totalItems,
-        pid_count: metrics.pidCount || 3
+        pid_count: metrics.pidCount || 3,
+        core_authorities: metrics.coreAuthorities || 0,
+        critical_authorities: metrics.criticalAuthorities || 0
       })
       setError(null)
     } catch (err) {
@@ -191,7 +195,7 @@ const StatsCards = () => {
                 <div className="stats-card__recent" style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
                   <div style={{ fontWeight: '600', marginBottom: '4px' }}>PID authorities (provenance):</div>
                   {pidAuthorities.map((auth, idx) => (
-                    <div key={idx} style={{ marginLeft: '8px', marginBottom: '2px', fontFamily: 'monospace' }}>
+                    <div key={idx} style={{ paddingLeft: '28px', textIndent: '-16px', marginBottom: '8px', fontFamily: 'monospace' }}>
                       – {auth.title} | {auth.pid}
                       <span style={{ marginLeft: '8px', color: 'var(--cds-text-helper)', fontSize: '0.7rem' }}>
                         ({auth.pdfCount || 0} PDFs, {auth.tiffCount || 0} TIFFs)
@@ -204,12 +208,52 @@ const StatsCards = () => {
                 <div className="stats-card__recent" style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
                   <div style={{ fontWeight: '600', marginBottom: '4px' }}>Recent items (past week):</div>
                   {recentDocs.map((doc, idx) => (
-                    <div key={idx} style={{ marginLeft: '8px', marginBottom: '2px' }}>
+                    <div key={idx} style={{ paddingLeft: '28px', textIndent: '-16px', marginBottom: '8px' }}>
                       – {doc.title} <span style={{ opacity: 0.6 }}>({doc.pid})</span>
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </Tile>
+      </Column>
+
+      <Column lg={4} md={2} sm={4}>
+        <Tile className="stats-card stats-card--core-auth">
+          <div className="stats-card__icon">
+            <Archive size={32} />
+          </div>
+          <div className="stats-card__content">
+            <div className="stats-card__number">
+              {formatNumber(stats?.core_authorities || 0)}
+            </div>
+            <div className="stats-card__label">Core Authorities</div>
+            <div className="stats-card__breakdown">
+              <Tag type="purple" size="sm">Provenance</Tag>
+              <div className="stats-card__meta" style={{ marginTop: '4px', fontSize: '0.7rem', lineHeight: '1.3' }}>
+                Staff · Projects · Students · Fonds · Publications
+              </div>
+            </div>
+          </div>
+        </Tile>
+      </Column>
+
+      <Column lg={4} md={2} sm={4}>
+        <Tile className="stats-card stats-card--critical-auth">
+          <div className="stats-card__icon">
+            <TagIcon size={32} />
+          </div>
+          <div className="stats-card__content">
+            <div className="stats-card__number">
+              {formatNumber(stats?.critical_authorities || 0)}
+            </div>
+            <div className="stats-card__label">Critical Authorities</div>
+            <div className="stats-card__breakdown">
+              <Tag type="teal" size="sm">ML Labels</Tag>
+              <div className="stats-card__meta" style={{ marginTop: '4px', fontSize: '0.7rem', lineHeight: '1.3' }}>
+                Stance · Method · Theme · Period · Audience · Outcome
+              </div>
             </div>
           </div>
         </Tile>

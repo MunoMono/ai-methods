@@ -130,6 +130,8 @@ class SystemMetrics:
     total_items: int
     pid_count: int
     pid_authorities: List['PidAuthority']
+    core_authorities: int  # 5 core intended categories (provenance)
+    critical_authorities: int  # 6 critical categories (ML labels)
 
 
 @strawberry.type
@@ -240,6 +242,21 @@ class Query:
                 logger.error(f"Error fetching PID authorities: {e}")
                 pid_authorities = []
             
+            # Get database authorities counts
+            # 5 core intended categories (provenance): agent_employment, ddr_projects, ref_students, ref_fonds, ref_publication_type
+            # 6 critical categories (ML labels): ref_epistemic_stance, ref_methodology, ref_project_theme, ref_ddr_period, ref_beneficiary_audience, ref_project_outcome
+            try:
+                result = db.execute(text("SELECT COUNT(*) FROM database_authorities WHERE category = 'core'"))
+                core_authorities_count = result.scalar() or 0
+            except:
+                core_authorities_count = 0
+            
+            try:
+                result = db.execute(text("SELECT COUNT(*) FROM database_authorities WHERE category = 'critical'"))
+                critical_authorities_count = result.scalar() or 0
+            except:
+                critical_authorities_count = 0
+            
             table_counts = TableCounts(
                 document_embeddings=counts['document_embeddings'],
                 research_sessions=counts['research_sessions'],
@@ -276,7 +293,9 @@ class Query:
             s3_storage=s3_stats,
             total_items=total_items,
             pid_count=pid_count,
-            pid_authorities=pid_authorities
+            pid_authorities=pid_authorities,
+            core_authorities=core_authorities_count,
+            critical_authorities=critical_authorities_count
         )
     
     @strawberry.field
