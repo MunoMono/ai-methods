@@ -24,7 +24,7 @@ Usage:
 
 import requests
 from sqlalchemy import text
-from app.core.database import SessionLocal
+from app.core.database import LocalSessionLocal
 from app.core.logging import logger
 
 DDR_GRAPHQL_URL = "https://api.ddrarchive.org/graphql"
@@ -319,7 +319,7 @@ def sync_all_authorities():
     logger.info("DATABASE AUTHORITIES SYNC - Starting")
     logger.info("=" * 70)
     
-    db = SessionLocal()
+    db = LocalSessionLocal()
     
     try:
         total_synced = 0
