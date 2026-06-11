@@ -6,41 +6,8 @@ const EvidenceGraph = ({ data }) => {
   const svgRef = useRef()
 
   useEffect(() => {
-    if (!data) {
-      // Render placeholder
-      const svg = d3.select(svgRef.current)
-      svg.selectAll('*').remove()
-      
-      svg.append('text')
-        .attr('x', 400)
-        .attr('y', 200)
-        .attr('text-anchor', 'middle')
-        .attr('fill', '#8d8d8d')
-        .style('font-size', '16px')
-        .text('Submit a query to visualize evidence flow')
-      
-      return
-    }
-
-    // Sample force-directed graph for evidence tracing
-    const nodes = [
-      { id: 'query', label: 'User Query', group: 1 },
-      { id: 'doc1', label: 'Document 1', group: 2 },
-      { id: 'doc2', label: 'Document 2', group: 2 },
-      { id: 'doc3', label: 'Document 3', group: 2 },
-      { id: 'answer', label: 'Agent Response', group: 3 }
-    ]
-
-    const links = [
-      { source: 'query', target: 'doc1', value: 0.9 },
-      { source: 'query', target: 'doc2', value: 0.7 },
-      { source: 'query', target: 'doc3', value: 0.5 },
-      { source: 'doc1', target: 'answer', value: 0.9 },
-      { source: 'doc2', target: 'answer', value: 0.7 }
-    ]
-
-    const width = 800
-    const height = 400
+    const width = 960
+    const height = 420
 
     d3.select(svgRef.current).selectAll('*').remove()
 
@@ -48,71 +15,121 @@ const EvidenceGraph = ({ data }) => {
       .attr('width', width)
       .attr('height', height)
 
-    const simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(d => d.id).distance(150))
-      .force('charge', d3.forceManyBody().strength(-400))
-      .force('center', d3.forceCenter(width / 2, height / 2))
+    if (!data) {
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#8d8d8d')
+        .style('font-size', '16px')
+        .text('Submit a query to visualize evidence flow')
 
-    const link = svg.append('g')
-      .selectAll('line')
-      .data(links)
-      .enter().append('line')
+      return
+    }
+
+    const nodes = [
+      { id: 'query', label: 'Query', column: 0, row: 0, group: 'query' },
+      { id: 'model', label: data.model || 'Granite model', column: 1, row: 0, group: 'model' },
+      { id: 'answer', label: 'Answer', column: 5, row: 0, group: 'answer' }
+    ]
+
+    const links = [
+      { source: 'query', target: 'model', value: 1 },
+      { source: 'model', target: 'answer', value: 1 }
+    ]
+
+    const documentsSeen = new Set()
+    const pidsSeen = new Set()
+
+    ;(data.sources || []).forEach((source, index) => {
+      const chunkId = source.chunkId || `chunk-${index}`
+      const documentId = source.documentId || `document-${index}`
+      const pidId = source.pid || `pid-missing-${index}`
+
+      nodes.push({ id: chunkId, label: source.chunkId ? `Chunk ${index + 1}` : `Source ${index + 1}`, column: 2, row: index, group: 'chunk' })
+      links.push({ source: 'model', target: chunkId, value: source.score || 0.5 })
+
+      if (!documentsSeen.has(documentId)) {
+        nodes.push({ id: documentId, label: source.title || 'Document', column: 3, row: index, group: 'document' })
+        documentsSeen.add(documentId)
+      }
+
+      links.push({ source: chunkId, target: documentId, value: 1 })
+
+      if (source.pid && !pidsSeen.has(pidId)) {
+        nodes.push({ id: pidId, label: source.pid, column: 4, row: index, group: 'pid' })
+        pidsSeen.add(pidId)
+      }
+
+      if (source.pid) {
+        links.push({ source: documentId, target: pidId, value: 1 })
+        links.push({ source: pidId, target: 'answer', value: 1 })
+      } else {
+        links.push({ source: documentId, target: 'answer', value: 0.5 })
+      }
+    })
+
+    const columns = [80, 240, 420, 600, 760, 900]
+    const rowSpacing = 84
+    const topOffset = 80
+
+    nodes.forEach((node) => {
+      node.x = columns[node.column]
+      node.y = node.column === 0 || node.column === 1 || node.column === 5
+        ? height / 2
+        : topOffset + (node.row * rowSpacing)
+    })
+
+    const nodeLookup = new Map(nodes.map((node) => [node.id, node]))
+    const hydratedLinks = links
+      .map((link) => ({ ...link, source: nodeLookup.get(link.source), target: nodeLookup.get(link.target) }))
+      .filter((link) => link.source && link.target)
+
+    const colorMap = {
+      query: '#0f62fe',
+      model: '#4589ff',
+      chunk: '#24a148',
+      document: '#8a3ffc',
+      pid: '#f1c21b',
+      answer: '#da1e28'
+    }
+
+    const linkGroup = svg.append('g').attr('class', 'evidence-graph__links')
+    const nodeGroup = svg.append('g').attr('class', 'evidence-graph__nodes')
+
+    linkGroup.selectAll('line')
+      .data(hydratedLinks)
+      .enter()
+      .append('line')
       .attr('stroke', '#8d8d8d')
-      .attr('stroke-width', d => d.value * 3)
+      .attr('stroke-opacity', 0.65)
+      .attr('stroke-width', (d) => Math.max(1.5, d.value * 3))
+      .attr('x1', (d) => d.source.x)
+      .attr('y1', (d) => d.source.y)
+      .attr('x2', (d) => d.target.x)
+      .attr('y2', (d) => d.target.y)
 
-    const node = svg.append('g')
-      .selectAll('circle')
+    nodeGroup.selectAll('circle')
       .data(nodes)
-      .enter().append('circle')
-      .attr('r', 20)
-      .attr('fill', d => d.group === 1 ? '#0f62fe' : d.group === 2 ? '#24a148' : '#da1e28')
-      .call(d3.drag()
-        .on('start', dragstarted)
-        .on('drag', dragged)
-        .on('end', dragended))
+      .enter()
+      .append('circle')
+      .attr('r', 22)
+      .attr('cx', (d) => d.x)
+      .attr('cy', (d) => d.y)
+      .attr('fill', (d) => colorMap[d.group] || '#6f6f6f')
+      .attr('stroke', '#ffffff')
+      .attr('stroke-width', 1.5)
 
-    const labels = svg.append('g')
-      .selectAll('text')
+    nodeGroup.selectAll('text')
       .data(nodes)
-      .enter().append('text')
-      .text(d => d.label)
+      .enter()
+      .append('text')
+      .text((d) => d.label.length > 20 ? `${d.label.slice(0, 20)}...` : d.label)
       .attr('font-size', 12)
       .attr('fill', '#f4f4f4')
       .attr('text-anchor', 'middle')
-      .attr('dy', 35)
-
-    simulation.on('tick', () => {
-      link
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y)
-
-      node
-        .attr('cx', d => d.x)
-        .attr('cy', d => d.y)
-
-      labels
-        .attr('x', d => d.x)
-        .attr('y', d => d.y)
-    })
-
-    function dragstarted(event) {
-      if (!event.active) simulation.alphaTarget(0.3).restart()
-      event.subject.fx = event.subject.x
-      event.subject.fy = event.subject.y
-    }
-
-    function dragged(event) {
-      event.subject.fx = event.x
-      event.subject.fy = event.y
-    }
-
-    function dragended(event) {
-      if (!event.active) simulation.alphaTarget(0)
-      event.subject.fx = null
-      event.subject.fy = null
-    }
+      .attr('x', (d) => d.x)
+      .attr('y', (d) => d.y + 36)
 
   }, [data])
 

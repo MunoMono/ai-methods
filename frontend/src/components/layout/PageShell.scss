@@ -1,0 +1,139 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+.page-grid {
+  padding-top: $spacing-07;
+  padding-bottom: $spacing-09;
+
+  @include breakpoint-down(md) {
+    padding-top: $spacing-06;
+    padding-bottom: $spacing-07;
+  }
+
+  &__column {
+    margin-bottom: $spacing-05;
+    min-width: 0;
+  }
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-05;
+  margin-bottom: $spacing-02;
+  padding-bottom: $spacing-06;
+  border-bottom: 1px solid var(--cds-border-subtle);
+
+  @include breakpoint-down(md) {
+    flex-direction: column;
+  }
+
+  &__content {
+    max-width: 48rem;
+    min-width: 0;
+  }
+
+  &__eyebrow {
+    @include type-style('label-02');
+    margin: 0 0 $spacing-03;
+    color: var(--cds-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__title {
+    @include type-style('heading-05');
+    margin: 0;
+    color: var(--cds-text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  &__description {
+    @include type-style('body-01');
+    margin: $spacing-04 0 0;
+    color: var(--cds-text-secondary);
+    max-width: 42rem;
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: $spacing-03;
+    min-width: 0;
+
+    > * {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    @include breakpoint-down(md) {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-05;
+  margin-bottom: $spacing-05;
+
+  @include breakpoint-down(md) {
+    flex-direction: column;
+  }
+
+  &__content {
+    min-width: 0;
+  }
+
+  &__title {
+    @include type-style('heading-03');
+    margin: 0 0 $spacing-02;
+    color: var(--cds-text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  &__description {
+    @include type-style('body-01');
+    margin: 0;
+    color: var(--cds-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-03;
+    align-items: flex-start;
+    min-width: 0;
+
+    > * {
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+}
+
+.section-heading {
+  margin-bottom: $spacing-01;
+
+  &__title {
+    @include type-style('heading-04');
+    margin: 0 0 $spacing-03;
+    color: var(--cds-text-primary);
+  }
+
+  &__description {
+    @include type-style('body-01');
+    margin: 0;
+    color: var(--cds-text-secondary);
+  }
+}

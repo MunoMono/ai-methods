@@ -2,9 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from strawberry.fastapi import GraphQLRouter
+import asyncio
 import logging
+import os
 
-from app.api.routes import agent, sessions, experiments, metrics, documents, sync, graphql_sync, provenance, analysis, viz, search
+from app.api.routes import agent, sessions, experiments, metrics, documents, sync, graphql_sync, provenance, analysis, viz, search, missingness, claims, query_runs, cross_read
 from app.api.graphql.schema import schema
 from app.core.config import settings
 from app.services.granite_service import initialize_granite
@@ -25,19 +27,25 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
-    logger.info("Starting Epistemic Drift Research API")
+    logger.info("Starting Testamentary Traces Research API")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
-    
-    # Granite auto-loading disabled to prevent OOM on 8GB RAM
-    # Load manually via: POST /api/granite/load-model
-    logger.info("Granite LLM service: Manual loading required (use /api/granite/load-model endpoint)")
-    
+    granite_init_task = None
+
+    auto_load = os.getenv("GRANITE_AUTO_LOAD", "true").strip().lower() in {"1", "true", "yes", "on"}
+    if auto_load:
+        granite_init_task = asyncio.create_task(initialize_granite())
+        logger.info("Granite LLM auto-load started in background")
+    else:
+        logger.info("Granite LLM service auto-load disabled by GRANITE_AUTO_LOAD")
+
     yield
-    logger.info("Shutting down Epistemic Drift Research API")
+    if granite_init_task and not granite_init_task.done():
+        granite_init_task.cancel()
+    logger.info("Shutting down Testamentary Traces Research API")
 
 
 app = FastAPI(
-    title="Epistemic Drift Research API",
+    title="Testamentary Traces Research API",
     description="FastAPI backend for cybernetic research with Granite LLM",
     version="0.1.0",
     lifespan=lifespan
@@ -64,6 +72,10 @@ app.include_router(provenance.router, prefix="/api/provenance", tags=["provenanc
 app.include_router(analysis.router, prefix="/api/granite", tags=["granite-analysis"])
 app.include_router(viz.router, prefix="/api/viz", tags=["visualizations"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
+app.include_router(missingness.router, prefix="/api/missingness", tags=["missingness"])
+app.include_router(claims.router, prefix="/api/claims", tags=["claims"])
+app.include_router(query_runs.router, prefix="/api/query-runs", tags=["query-runs"])
+app.include_router(cross_read.router, prefix="/api/cross-read", tags=["cross-read"])
 
 # GraphQL endpoint
 graphql_app = GraphQLRouter(schema)
@@ -73,7 +85,7 @@ app.include_router(graphql_app, prefix="/api/graphql")
 @app.get("/")
 async def root():
     return {
-        "message": "Epistemic Drift Research API",
+        "message": "Testamentary Traces Research API",
         "version": "0.1.0",
         "docs": "/docs"
     }

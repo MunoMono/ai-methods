@@ -1,6 +1,6 @@
 """
 Document upload and processing endpoints
-Handles PDF uploads with temporal metadata for epistemic drift analysis
+Handles PDF uploads with temporal metadata for testamentary traces analysis
 """
 import logging
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
@@ -32,7 +32,7 @@ async def upload_document(
     metadata: Optional[str] = Form("{}")
 ):
     """
-    Upload PDF/TIFF document for epistemic drift analysis
+    Upload PDF/TIFF document for testamentary traces analysis
     
     CRITICAL: Only PID-linked assets are eligible for training corpus
     
@@ -156,6 +156,7 @@ async def get_document(document_id: str):
         db.close()
 
 
+@router.get("")
 @router.get("/")
 async def list_documents(
     year: Optional[int] = None,
@@ -212,6 +213,8 @@ async def get_ml_annotations(document_id: str):
             raise HTTPException(status_code=404, detail="Document not found")
         
         authority_data = doc.authority_data or {}
+        page_count = getattr(doc, 'page_count', None)
+        ml_processed_at = getattr(doc, 'ml_processed_at', None)
         
         return {
             "document_id": doc.document_id,
@@ -220,8 +223,8 @@ async def get_ml_annotations(document_id: str):
             "used_for_ml": authority_data.get('used_for_ml', False),
             "ml_pages": authority_data.get('ml_pages', ''),
             "ml_annotation": authority_data.get('ml_annotation', ''),
-            "page_count": doc.page_count,
-            "ml_processed_at": doc.ml_processed_at.isoformat() if doc.ml_processed_at else None
+            "page_count": page_count,
+            "ml_processed_at": ml_processed_at.isoformat() if ml_processed_at else None
         }
     finally:
         db.close()

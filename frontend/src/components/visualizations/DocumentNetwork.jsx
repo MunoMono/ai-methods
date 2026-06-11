@@ -2,11 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Loading } from '@carbon/react';
 import { carbonColors, d3Scales, chartStyles, animations } from '../../utils/carbonD3Theme';
-import getApiBaseUrl from '../../utils/apiBaseUrl';
+import { fetchDocumentNetwork } from '../../api/viz';
 import './DocumentNetwork.scss';
 
 const DocumentNetwork = () => {
-  const apiBaseUrl = getApiBaseUrl();
   const svgRef = useRef();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,8 +37,7 @@ const DocumentNetwork = () => {
 
   const fetchNetworkData = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/viz/document-network`);
-      const networkData = await response.json();
+      const networkData = await fetchDocumentNetwork();
       setData(networkData);
     } catch (error) {
       console.error('Failed to fetch network data:', error);
@@ -81,8 +79,8 @@ const DocumentNetwork = () => {
 
     // Size scale for nodes (based on PDF count)
     const sizeScale = d3Scales.nodeSize(
-      Math.min(...data.nodes.map(n => n.pdf_count)),
-      Math.max(...data.nodes.map(n => n.pdf_count))
+      Math.min(...data.nodes.map(n => n.pdf_count || 1)),
+      Math.max(...data.nodes.map(n => n.pdf_count || 1))
     );
 
     // Create force simulation
@@ -298,7 +296,7 @@ const DocumentNetwork = () => {
       <div className="network-legend">
         <h5>Clusters</h5>
         {data.clusters.map((cluster, index) => (
-          <div key={cluster.theme} className="legend-item">
+          <div key={cluster.id || cluster.theme || index} className="legend-item">
             <div 
               className="legend-color" 
               style={{ backgroundColor: d3Scales.categorical(data.clusters.map(c => c.theme))(cluster.theme) }}

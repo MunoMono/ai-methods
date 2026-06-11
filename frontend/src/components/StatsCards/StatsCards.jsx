@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Grid, Column, Tile, SkeletonText, ProgressBar, Tag } from '@carbon/react'
 import { DataBase, CloudApp, Cube, Chemistry, Archive, Tag as TagIcon } from '@carbon/icons-react'
+import getApiBaseUrl from '../../utils/apiBaseUrl'
 import '../../styles/components/StatsCards.scss'
 
 const StatsCards = () => {
@@ -45,7 +46,7 @@ const StatsCards = () => {
 
   const demoRecentDocs = [
     { title: 'Systems of circulation in design pedagogy', pid: 'DDR-2024-001' },
-    { title: 'Epistemic drift in multimodal archives', pid: 'DDR-2024-002' },
+    { title: 'Testamentary traces in multimodal archives', pid: 'DDR-2024-002' },
     { title: 'Method repertoires for situated research', pid: 'DDR-2024-003' }
   ]
 
@@ -118,12 +119,9 @@ const StatsCards = () => {
       `
       
       // Use environment-aware URLs
-      const graphqlUrl = import.meta.env.PROD 
-        ? '/api/graphql' 
-        : 'http://localhost:8000/graphql'
-      const dashboardStatsUrl = import.meta.env.PROD
-        ? '/api/viz/dashboard-stats'
-        : 'http://localhost:8000/api/viz/dashboard-stats'
+      const apiBaseUrl = getApiBaseUrl()
+      const graphqlUrl = `${apiBaseUrl}/api/graphql`
+      const dashboardStatsUrl = `${apiBaseUrl}/api/viz/dashboard-stats`
 
       const [graphqlRes, dashboardRes] = await Promise.all([
         fetch(graphqlUrl, {

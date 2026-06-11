@@ -1,0 +1,239 @@
+import { InlineNotification, Tag } from '@carbon/react'
+import { Search } from '@carbon/icons-react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { listDocuments, getDocument, getDocumentAnnotations } from '../../api/documents'
+import { getSimilarDocuments, autocompleteSearch } from '../../api/search'
+import CorpusSearchPanel from '../../components/corpus/CorpusSearchPanel'
+import DocumentTable from '../../components/corpus/DocumentTable'
+import DocumentDetailPanel from '../../components/corpus/DocumentDetailPanel'
+import PageHeader from '../../components/layout/PageHeader'
+import { PageGrid, PageColumn as Column } from '../../components/layout/PageGrid'
+
+const defaultFilters = {
+  keyword: '',
+  year: '',
+  status: ''
+}
+
+const CorpusExplorer = () => {
+  const navigate = useNavigate()
+  const [filters, setFilters] = useState(defaultFilters)
+  const [documents, setDocuments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [selectedDocumentId, setSelectedDocumentId] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [selectedDetail, setSelectedDetail] = useState(null)
+  const [suggestions, setSuggestions] = useState({ documents: [], themes: [], entities: [] })
+
+  useEffect(() => {
+    let isCancelled = false
+
+    const loadDocuments = async () => {
+      setLoading(true)
+      setError('')
+
+      try {
+        const payload = await listDocuments({
+          year: filters.year || undefined,
+          status: filters.status || undefined
+        })
+
+        if (isCancelled) {
+          return
+        }
+
+        setDocuments(payload.documents)
+        setSelectedDocumentId((currentSelectedId) => {
+          if (payload.documents.length === 0) {
+            setSelectedDetail(null)
+            return null
+          }
+
+          const selectionExists = currentSelectedId && payload.documents.some((document) => document.id === currentSelectedId)
+          return selectionExists ? currentSelectedId : payload.documents[0].id
+        })
+      } catch (loadError) {
+        if (!isCancelled) {
+          setError(loadError.message || 'Failed to load corpus documents.')
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadDocuments()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [filters.year, filters.status])
+
+  useEffect(() => {
+    if (!selectedDocumentId) {
+      setSelectedDetail(null)
+      return
+    }
+
+    const selectedDocument = documents.find((document) => document.id === selectedDocumentId)
+
+    if (!selectedDocument) {
+      return
+    }
+
+    let isCancelled = false
+
+    const loadDocumentDetail = async () => {
+      setDetailLoading(true)
+
+      try {
+        const [detail, annotations, similar] = await Promise.all([
+          getDocument(selectedDocument.id),
+          getDocumentAnnotations(selectedDocument.id),
+          getSimilarDocuments(selectedDocument.id).catch(() => ({ similarDocuments: [], metadata: {} }))
+        ])
+
+        if (isCancelled) {
+          return
+        }
+
+        setSelectedDetail({
+          document: {
+            ...selectedDocument,
+            ...detail,
+            pid: annotations.pid || selectedDocument.pid || null,
+            page_count: annotations.page_count || detail.page_count || 0
+          },
+          annotations,
+          similarDocuments: similar.similarDocuments || []
+        })
+      } catch (detailError) {
+        if (!isCancelled) {
+          setSelectedDetail({
+            document: selectedDocument,
+            annotations: null,
+            similarDocuments: [],
+            error: detailError.message || 'Failed to load document detail.'
+          })
+        }
+      } finally {
+        if (!isCancelled) {
+          setDetailLoading(false)
+        }
+      }
+    }
+
+    loadDocumentDetail()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [documents, selectedDocumentId])
+
+  useEffect(() => {
+    const query = filters.keyword.trim()
+
+    if (query.length < 2) {
+      setSuggestions({ documents: [], themes: [], entities: [] })
+      return
+    }
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const nextSuggestions = await autocompleteSearch({ q: query })
+        setSuggestions(nextSuggestions)
+      } catch (autocompleteError) {
+        console.error('Failed to fetch autocomplete suggestions:', autocompleteError)
+      }
+    }, 250)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [filters.keyword])
+
+  const filteredDocuments = useMemo(() => {
+    const query = filters.keyword.trim().toLowerCase()
+
+    if (!query) {
+      return documents
+    }
+
+    return documents.filter((document) => {
+      return [document.title, document.id, document.pid]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query))
+    })
+  }, [documents, filters.keyword])
+
+  const handleDocumentSelect = (document) => {
+    setSelectedDocumentId(document.id)
+  }
+
+  return (
+    <PageGrid className="corpus-explorer-page">
+      <Column>
+        <PageHeader
+          title="Sources"
+          description="Inspect DDR records, ingestion status, metadata, PID links, and source handoffs before moving into interrogation or analysis."
+          actions={(
+            <Tag type="blue" size="md">
+              <Search size={16} /> Endpoint-driven
+            </Tag>
+          )}
+        />
+      </Column>
+
+      <Column>
+        <InlineNotification
+          lowContrast
+          kind="info"
+          title="Analytical output"
+          subtitle="Source inspection produces a source handoff: document metadata, ingestion status, PID-linked annotations, and launch points into the core workbench views."
+        />
+      </Column>
+
+      {error && (
+        <Column>
+          <InlineNotification
+            lowContrast
+            kind="error"
+            title="Corpus load failed"
+            subtitle={error}
+          />
+        </Column>
+      )}
+
+      <Column lg={3}>
+        <CorpusSearchPanel
+          filters={filters}
+          suggestions={suggestions}
+          onChange={setFilters}
+          onReset={() => setFilters(defaultFilters)}
+        />
+      </Column>
+
+      <Column lg={6}>
+        <DocumentTable
+          documents={filteredDocuments}
+          loading={loading}
+          selectedDocumentId={selectedDocumentId}
+          onSelect={handleDocumentSelect}
+        />
+      </Column>
+
+      <Column lg={5}>
+        <DocumentDetailPanel
+          detail={selectedDetail}
+          loading={detailLoading}
+          onTraceEvidence={() => navigate('/source-interrogation')}
+          onViewAnalytics={() => navigate('/semantic-atlas')}
+          onInspectMissingness={() => navigate('/absences')}
+        />
+      </Column>
+    </PageGrid>
+  )
+}
+
+export default CorpusExplorer

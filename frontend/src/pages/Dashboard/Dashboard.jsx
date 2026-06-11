@@ -1,185 +1,266 @@
-import { Grid, Column, Tile, ClickableTile, Tag } from '@carbon/react'
+import { ClickableTile, InlineNotification, Tag, Tile } from '@carbon/react'
 import { useNavigate } from 'react-router-dom'
-import { ChartNetwork, DataVis_1, Recording, Chemistry, Checkmark, InProgress, Chip } from '@carbon/icons-react'
-import { useEffect, useState } from 'react'
-import TemporalDriftChart from '../../components/visualizations/TemporalDriftChart'
-import StatsCards from '../../components/StatsCards/StatsCards'
+import { Search, WarningAlt, Checkmark, InProgress, Chip, ArrowRight } from '@carbon/icons-react'
+import { useEffect, useMemo, useState } from 'react'
+import PageHeader from '../../components/layout/PageHeader'
+import { PageGrid, PageColumn as Column } from '../../components/layout/PageGrid'
+import SectionHeading from '../../components/layout/SectionHeading'
+import { fetchDashboardStats } from '../../api/viz'
+import { getGraniteModelInfo } from '../../api/granite'
 import '../../styles/pages/Dashboard.scss'
+
+const readinessDefinitions = [
+  {
+    key: 'source-interrogation',
+    title: 'Source interrogation',
+    description: 'Analytical output: retrieval trail / source stack.',
+    priority: 'Keep the retrieval path stable while shaping exportable research traces.'
+  },
+  {
+    key: 'absences',
+    title: 'Absences',
+    description: 'Analytical output: missingness report / gap log.',
+    priority: 'Replace mock events with a lightweight backend gap log.'
+  },
+  {
+    key: 'cross-readings',
+    title: 'Cross-readings',
+    description: 'Analytical output: testimony-record map.',
+    priority: 'Add transcript-backed probes only when case studies require them.'
+  },
+  {
+    key: 'semantic-atlas',
+    title: 'Semantic atlas',
+    description: 'Analytical output: atlas coordinates / cluster interpretation notes.',
+    priority: 'Keep visual interpretation tied to source records and notes.'
+  },
+  {
+    key: 'claims-evidence',
+    title: 'Claims & evidence',
+    description: 'Analytical output: claim-evidence matrix.',
+    priority: 'Back claims with persisted evidence attachments before automation.'
+  }
+]
 
 const Dashboard = () => {
   const navigate = useNavigate()
   const [graniteInfo, setGraniteInfo] = useState(null)
+  const [stats, setStats] = useState(null)
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
-    fetch('/api/granite/model-info')
-      .then(res => res.json())
-      .then(data => setGraniteInfo(data))
-      .catch(err => console.error('Failed to fetch Granite model info:', err))
+    let isCancelled = false
+
+    const loadDashboard = async () => {
+      try {
+        const [granitePayload, statsPayload] = await Promise.all([
+          getGraniteModelInfo().catch(() => null),
+          fetchDashboardStats().catch(() => null)
+        ])
+
+        if (isCancelled) {
+          return
+        }
+
+        setGraniteInfo(granitePayload)
+        setStats(statsPayload)
+      } catch (error) {
+        if (!isCancelled) {
+          setLoadError(error.message || 'Failed to load dashboard metrics.')
+        }
+      }
+    }
+
+    loadDashboard()
+
+    return () => {
+      isCancelled = true
+    }
   }, [])
+
+  const corpusStatus = useMemo(() => {
+    const overview = stats?.overview || {}
+    const mlProcessing = stats?.mlProcessing || {}
+    return [
+      { label: 'Documents', value: overview.totalDocuments ?? 0 },
+      { label: 'Pages', value: overview.totalPages ?? 0 },
+      { label: 'Embeddings', value: mlProcessing.documentsWithEmbeddings ?? 0 },
+      { label: 'PDF assets', value: overview.totalPdfAssets ?? overview.totalPdfs ?? 0 }
+    ]
+  }, [stats])
+
+  const recentActivity = stats?.recentActivity?.length
+    ? stats.recentActivity.slice(0, 4).map((item) => ({
+        label: item.label || item.type || 'Activity',
+        detail: `${item.count} recent event${item.count === 1 ? '' : 's'}`
+      }))
+    : [
+        { label: 'Granite retrieval path', detail: 'Healthy on the local small Granite model.' },
+        { label: 'Docling-ingested corpus', detail: 'Only four PDFs currently support retrieval and clustering.' },
+        { label: 'Workbench refactor', detail: 'Primary workflow now centers Ask, Missingness, Cross-read, Clusters, and Claims.' }
+      ]
+
+  const limitations = [
+    'Only four Docling-ingested PDFs are available locally, so outputs are case-study scale.',
+    'Missingness, Cross-read, and Claims still use mocked first-wave data contracts while backend tables stabilize.',
+    'Clusters reflect the current embedded evidence surface, not the full archive, and must not be treated as proof.'
+  ]
+
+  const priorities = [
+    'Replace mocked missingness events with a lightweight backend event log.',
+    'Persist Ask retrieval trails and Claims evidence attachments through stable endpoints.',
+    'Tighten document and chunk handoff from Corpus into Ask and Clusters.'
+  ]
 
   return (
     <div className="dashboard">
-      <Grid narrow>
-        {/* Hero Section */}
-        <Column lg={16} md={8} sm={4}>
-          <div className="dashboard__hero">
-            <div className="dashboard__hero-wrapper">
-              <h1 className="dashboard__hero-title">
-                Critical testamentary traces of contested design knowledge using multimodal machine learning and visual analytics
-              </h1>
-              <p className="dashboard__hero-subtitle">
-                I investigate how institutions record, structure and reshape contested knowledge, and turn that analysis into traceable research outcomes. In my PhD, I do that through the RCA's Department of Design Research archive, using it as a live case of how organizations make some forms of knowledge visible while obscuring others. My practice combines critical analysis, communication design and computational modelling to surface auditable patterns, gaps and signals that conventional research methods often miss.
-              </p>
+      <div className="dashboard__hero">
+        <div className="dashboard__hero-inner">
+          <PageHeader
+            eyebrow="90-day statement of work"
+            title="Archival Activation Workbench"
+            description="A provenance-aware research apparatus for source interrogation, absences, cross-readings, semantic patterning, and claim-evidence control."
+          />
+        </div>
+      </div>
+
+      <PageGrid>
+        <Column>
+          <Tile className="dashboard__granite-hero-content">
+            <div className="dashboard__granite-hero-badge">
+              <Tag type="blue" size="md">
+                <Chip size={20} /> Granite status
+              </Tag>
+              {graniteInfo && (
+                <Tag type={graniteInfo.loaded ? 'green' : 'gray'} size="md">
+                  {graniteInfo.loaded ? <Checkmark size={16} /> : <InProgress size={16} />}
+                  {graniteInfo.loaded ? ' Active' : ' Standby'}
+                </Tag>
+              )}
             </div>
-          </div>
-        </Column>
-        {/* Granite Hero Section */}
-        <Column lg={6} md={4} sm={4}>
-              <div className="dashboard__granite-hero-logo">
-                <img src="/granite-logo.png" alt="IBM Granite" />
-              </div>
-            </Column>
-        <Column lg={10} md={4} sm={4}>
-          <div className="dashboard__granite-hero-content">
-                <div className="dashboard__granite-hero-badge">
-                  <Tag type="blue" size="md">
-                    <Chip size={20} /> Powered by IBM Granite
-                  </Tag>
-                  {graniteInfo && (
-                    <Tag type={graniteInfo.loaded ? 'green' : 'gray'} size="md">
-                      {graniteInfo.loaded ? <Checkmark size={16} /> : <InProgress size={16} />}
-                      {graniteInfo.loaded ? ' Active' : ' Standby'}
-                    </Tag>
-                  )}
+            <h2 className="dashboard__granite-hero-title">Research apparatus status</h2>
+            <p className="dashboard__granite-hero-description">
+              The current workbench is organized around five analytical outputs: source interrogation, absences, cross-readings, semantic patterning, and claims & evidence. Each view exists to produce a thesis artefact, provenance trail, or research decision surface.
+            </p>
+            {graniteInfo && (
+              <div className="dashboard__granite-hero-specs">
+                <div className="dashboard__granite-hero-spec">
+                  <span className="dashboard__granite-hero-spec-label">Model</span>
+                  <span className="dashboard__granite-hero-spec-value">{graniteInfo.model_name || 'Unavailable'}</span>
                 </div>
-                <h2 className="dashboard__granite-hero-title">
-                  Enterprise AI for academic research in codifying testamentary traces
-                </h2>
-                <p className="dashboard__granite-hero-description">
-                  PID-gated natural language processing (NLP) framework integrating BERT embeddings with robust provenance tracking and IBM Granite fine-tuning to ensure full academic attribution. IBM Granite, a family of open, performant, and trusted AI models designed for enterprise and scientific applications, underpins the system through the deployment of Granite 3.1 2B Instruct with 4-bit quantization (q4_K_M), served via Ollama for efficient CPU-based inference.
-                </p>
-                {graniteInfo && (
-                  <div className="dashboard__granite-hero-specs">
-                    <div className="dashboard__granite-hero-spec">
-                      <span className="dashboard__granite-hero-spec-label">Model</span>
-                      <span className="dashboard__granite-hero-spec-value">{graniteInfo.model_name || 'granite3.1-dense:2b-instruct-q4_K_M'}</span>
-                    </div>
-                    <div className="dashboard__granite-hero-spec">
-                      <span className="dashboard__granite-hero-spec-label">Device</span>
-                      <span className="dashboard__granite-hero-spec-value">{graniteInfo.device || 'CPU'}</span>
-                    </div>
-                    {graniteInfo.max_tokens != null && (
-                      <>
-                        <div className="dashboard__granite-hero-spec">
-                          <span className="dashboard__granite-hero-spec-label">Max Tokens</span>
-                          <span className="dashboard__granite-hero-spec-value">{graniteInfo.max_tokens}</span>
-                        </div>
-                        <div className="dashboard__granite-hero-spec">
-                          <span className="dashboard__granite-hero-spec-label">Temperature</span>
-                          <span className="dashboard__granite-hero-spec-value">{graniteInfo.temperature}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
+                <div className="dashboard__granite-hero-spec">
+                  <span className="dashboard__granite-hero-spec-label">Device</span>
+                  <span className="dashboard__granite-hero-spec-value">{graniteInfo.device || 'CPU'}</span>
+                </div>
+                <div className="dashboard__granite-hero-spec">
+                  <span className="dashboard__granite-hero-spec-label">Max tokens</span>
+                  <span className="dashboard__granite-hero-spec-value">{graniteInfo.max_tokens ?? 'N/A'}</span>
+                </div>
+                <div className="dashboard__granite-hero-spec">
+                  <span className="dashboard__granite-hero-spec-label">Temperature</span>
+                  <span className="dashboard__granite-hero-spec-value">{graniteInfo.temperature ?? 'N/A'}</span>
+                </div>
               </div>
-        </Column>
-
-        <Column lg={16} md={8} sm={4}>
-          <h2 className="dashboard__section-title">System metrics</h2>
-        </Column>
-        
-        <Column lg={16} md={8} sm={4}>
-          <StatsCards />
-        </Column>
-
-        <Column lg={16} md={8} sm={4}>
-          <div className="dashboard__diagram-section">
-            <Tag type="blue" size="md" className="dashboard__diagram-badge">
-              <Checkmark size={16} /> PID-gated architecture
-            </Tag>
-            <img 
-              src="/diagrams/home/phd-model.svg?v=20260227" 
-              alt="PhD research framework diagram showing the three strands of research"
-              className="dashboard__diagram"
-            />
-          </div>
-        </Column>
-
-        <Column lg={16} md={8} sm={4}>
-          <h2 className="dashboard__section-title">Research tools</h2>
-        </Column>
-
-        <Column lg={8} md={4} sm={4}>
-          <ClickableTile onClick={() => navigate('/tracer')} className="dashboard__tile">
-            <div className="dashboard__tile-icon">
-              <ChartNetwork size={32} />
-            </div>
-            <h3>Evidence tracer</h3>
-            <p>Trace predictions to archival sources with formal citations. Full provenance: Embeddings → Chunks → PIDs → DDR Archive</p>
-          </ClickableTile>
-        </Column>
-
-        <Column lg={8} md={4} sm={4}>
-          <ClickableTile onClick={() => navigate('/sessions')} className="dashboard__tile">
-            <div className="dashboard__tile-icon">
-              <Recording size={32} />
-            </div>
-            <h3>Session recorder</h3>
-            <p>Inference logging for XAI. Every prediction attributed to source chunks for supervisor validation</p>
-          </ClickableTile>
-        </Column>
-
-        <Column lg={8} md={4} sm={4}>
-          <ClickableTile onClick={() => navigate('/experiments')} className="dashboard__tile">
-            <div className="dashboard__tile-icon">
-              <Chemistry size={32} />
-            </div>
-            <h3>Experimental log</h3>
-            <p>IBM Granite training runs with provenance. Track which PIDs trained which model for reproducibility</p>
-          </ClickableTile>
-        </Column>
-
-        <Column lg={8} md={4} sm={4}>
-          <Tile className="dashboard__tile dashboard__tile--static">
-            <div className="dashboard__tile-icon">
-              <DataVis_1 size={32} />
-            </div>
-            <h3>Temporal analysis</h3>
-            <p>Monitor epistemic shift patterns and model behavior changes</p>
+            )}
           </Tile>
         </Column>
 
-        <Column lg={16} md={8} sm={4}>
-          <Tile className="dashboard__chart-tile">
-            <h3 className="dashboard__chart-title">Temporal shift analysis</h3>
-            <TemporalDriftChart />
-          </Tile>
+        {loadError && (
+          <Column>
+            <InlineNotification lowContrast kind="warning" title="Dashboard metrics degraded" subtitle={loadError} />
+          </Column>
+        )}
+
+        <Column>
+          <SectionHeading title="Corpus status" />
         </Column>
 
-        <Column lg={16} md={8} sm={4}>
-          <h2 className="dashboard__section-title">System architecture</h2>
+        {corpusStatus.map((item) => (
+          <Column key={item.label} lg={4} md={4} sm={4}>
+            <Tile className="dashboard__info-tile">
+              <h4>{item.label}</h4>
+              <p style={{ fontSize: '2rem', margin: '0.25rem 0 0' }}>{item.value}</p>
+            </Tile>
+          </Column>
+        ))}
+
+        <Column>
+          <SectionHeading title="Five-bucket readiness" />
         </Column>
-        
+
+        {readinessDefinitions.map((item) => (
+          <Column key={item.key} lg={4} md={4} sm={4}>
+            <ClickableTile onClick={() => navigate(`/${item.key}`)} className="dashboard__tile">
+              <div className="dashboard__tile-icon">
+                <ArrowRight size={24} />
+              </div>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+              <p style={{ color: 'var(--cds-text-secondary)' }}>{item.priority}</p>
+            </ClickableTile>
+          </Column>
+        ))}
+
+        <Column>
+          <SectionHeading title="Supporting views" />
+        </Column>
+
+        <Column lg={5} md={4} sm={4}>
+          <ClickableTile onClick={() => navigate('/sources')} className="dashboard__tile">
+            <div className="dashboard__tile-icon">
+              <Search size={32} />
+            </div>
+            <h3>Sources</h3>
+            <p>Source inspection before interrogation: document metadata, ingestion status, annotation detail, and workflow handoff.</p>
+          </ClickableTile>
+        </Column>
+
+        <Column lg={5} md={4} sm={4}>
+          <ClickableTile onClick={() => navigate('/provenance')} className="dashboard__tile">
+            <div className="dashboard__tile-icon">
+              <WarningAlt size={32} />
+            </div>
+            <h3>Provenance</h3>
+            <p>Exports, session traces, and training provenance kept available as audit instruments rather than top-level research destinations.</p>
+          </ClickableTile>
+        </Column>
+
         <Column lg={5} md={8} sm={4}>
           <Tile className="dashboard__info-tile">
-            <h4>Ingestion layer</h4>
-            <p>PID-gated allowlist: GraphQL sync + S3 validation + Docling OCR (PDF/TIFF)</p>
+            <SectionHeading title="Recent research activity" />
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              {recentActivity.map((item) => (
+                <div key={item.label}>
+                  <strong>{item.label}</strong>
+                  <p style={{ margin: '0.25rem 0 0' }}>{item.detail}</p>
+                </div>
+              ))}
+            </div>
           </Tile>
         </Column>
+
         <Column lg={5} md={8} sm={4}>
           <Tile className="dashboard__info-tile">
-            <h4>NLP layer</h4>
-            <p>BERT embeddings (384-dim) + IBM Granite fine-tuning + pgvector similarity search</p>
+            <SectionHeading title="Current known limitations" />
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              {limitations.map((item) => (
+                <p key={item} style={{ margin: 0 }}>{item}</p>
+              ))}
+            </div>
           </Tile>
         </Column>
+
         <Column lg={6} md={8} sm={4}>
           <Tile className="dashboard__info-tile">
-            <h4>Provenance layer</h4>
-            <p>Training runs + inference logs + corpus snapshots + formal citations</p>
+            <SectionHeading title="Next build priority" />
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              {priorities.map((item) => (
+                <p key={item} style={{ margin: 0 }}>{item}</p>
+              ))}
+            </div>
           </Tile>
         </Column>
-      </Grid>
+      </PageGrid>
     </div>
   )
 }

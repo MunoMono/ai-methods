@@ -1,32 +1,26 @@
-@use '@carbon/react/scss/theme' as *;
-@use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 
-// Carbon UI Shell Header is styled by default
-// Custom responsive overrides for mobile/tablet
-
-// Mobile: Hide desktop navigation, show hamburger menu
 @media (max-width: 671px) {
   .cds--header__nav {
     display: none;
   }
-  
+
   .cds--header__menu-toggle {
     display: flex;
   }
 }
 
-// Tablet and up: Show desktop navigation, hide hamburger menu and side nav
 @media (min-width: 672px) {
   .cds--header__nav {
     display: flex;
+    flex: 1;
+    min-width: 0;
   }
-  
+
   .cds--header__menu-toggle {
     display: none !important;
   }
-  
-  .mobile-nav,
+
   .cds--side-nav,
   .cds--side-nav__overlay {
     display: none !important;
@@ -34,35 +28,26 @@
   }
 }
 
-// Tablet breakpoint (672px - 1056px)
 @include breakpoint(md) {
   .cds--header__nav {
-    flex: 1;
-  }
-  
-  .cds--header-panel {
-    width: 16rem;
+    gap: 0;
   }
 }
 
-// Desktop breakpoint (1056px+)
-@include breakpoint(lg) {
-  .cds--header__nav {
-    flex: 1;
-  }
-  
-  .cds--header-panel {
-    width: 20rem;
-  }
-}
-
-// Remove white spacers between menu items
-.cds--header__menu-item {
+.cds--header__menu-item,
+.cds--header__menu-title[aria-expanded] {
   border-left: none !important;
   border-right: none !important;
 }
 
-// Ensure proper z-index for overlays
+.cds--header__menu {
+  max-width: 20rem;
+}
+
+.cds--header__submenu {
+  min-width: 16rem;
+}
+
 .cds--side-nav__overlay {
   z-index: 6000;
 }

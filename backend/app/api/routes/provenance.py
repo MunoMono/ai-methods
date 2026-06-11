@@ -33,6 +33,8 @@ async def get_chunk_citation(chunk_id: str):
             raise HTTPException(status_code=404, detail=f"Chunk {chunk_id} not found or has no PID")
         
         return citation
+    except HTTPException:
+        raise
         
     except Exception as e:
         logger.error(f"Error building citation: {e}")
@@ -48,7 +50,11 @@ async def get_chunk_provenance(chunk_id: str):
     """
     try:
         provenance_chain = provenance.get_chunk_provenance(chunk_id)
+        if provenance_chain.get("error") == "Chunk not found":
+            raise HTTPException(status_code=404, detail=f"Chunk {chunk_id} not found")
         return provenance_chain
+    except HTTPException:
+        raise
         
     except Exception as e:
         logger.error(f"Error getting provenance: {e}")

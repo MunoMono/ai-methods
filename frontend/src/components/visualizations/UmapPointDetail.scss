@@ -1,0 +1,43 @@
+.umap-point-detail {
+  margin-top: 1.5rem;
+  background: rgba(22, 22, 22, 0.78);
+  border: 1px solid rgba(69, 137, 255, 0.16);
+
+  &__tags,
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 0.35rem;
+    margin: 1rem 0;
+  }
+
+  &__excerpt {
+    margin-bottom: 1rem;
+    padding: 0.875rem;
+    border-left: 3px solid rgba(69, 137, 255, 0.5);
+    background: rgba(255, 255, 255, 0.04);
+    line-height: 1.6;
+  }
+
+  &__surface {
+    margin-bottom: 1rem;
+    padding: 0.875rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+
+    h4 {
+      margin: 0 0 0.75rem;
+    }
+  }
+
+  &__limit,
+  &__limits p {
+    margin: 0.5rem 0 0;
+    color: rgba(244, 244, 244, 0.88);
+  }
+}

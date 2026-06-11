@@ -6,7 +6,7 @@ const TemporalDriftChart = () => {
   const svgRef = useRef()
 
   useEffect(() => {
-    // Sample data for epistemic drift visualization
+    // Sample data for testamentary traces visualization
     const data = [
       { year: 2015, dialectical: 45, emergent: 12 },
       { year: 2017, dialectical: 38, emergent: 23 },

@@ -2,35 +2,91 @@ import {
   Header as CarbonHeader,
   HeaderName,
   HeaderNavigation,
+  HeaderMenu,
   HeaderMenuItem,
   HeaderMenuButton,
   HeaderGlobalBar,
   HeaderGlobalAction,
-  HeaderPanel,
-  HeaderSideNavItems,
   SideNav,
   SideNavItems,
   SideNavLink,
   SideNavMenu,
   SideNavMenuItem,
-  Switcher,
-  SwitcherItem,
-  SwitcherDivider,
   SkipToContent
 } from '@carbon/react'
-import { Asleep, Light, UserAvatar, Switcher as SwitcherIcon } from '@carbon/icons-react'
+import { Asleep, Light, UserAvatar } from '@carbon/icons-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useState } from 'react'
 import '../../styles/components/Header.scss'
 
+const topLevelNavigationItems = [
+  {
+    label: 'Workbench',
+    path: '/workbench',
+    isActive: (pathname) => pathname === '/' || pathname === '/workbench' || pathname === '/dashboard'
+  },
+  {
+    label: 'Sources',
+    path: '/sources',
+    isActive: (pathname) => pathname === '/sources' || pathname === '/corpus'
+  }
+]
+
+const analysisItems = [
+  {
+    label: 'Source Interrogation',
+    path: '/source-interrogation',
+    isActive: (pathname) => pathname === '/source-interrogation' || pathname === '/ask' || pathname === '/tracer'
+  },
+  {
+    label: 'Absences',
+    path: '/absences',
+    isActive: (pathname) => pathname === '/absences' || pathname === '/missingness'
+  },
+  {
+    label: 'Cross-readings',
+    path: '/cross-readings',
+    isActive: (pathname) => pathname === '/cross-readings' || pathname === '/cross-read'
+  },
+  {
+    label: 'Semantic Atlas',
+    path: '/semantic-atlas',
+    isActive: (pathname) => pathname === '/semantic-atlas' || pathname === '/clusters' || pathname === '/visual-analytics'
+  }
+]
+
+const evidenceItems = [
+  {
+    label: 'Claims & Evidence',
+    path: '/claims-evidence',
+    isActive: (pathname) => pathname === '/claims-evidence' || pathname === '/claims'
+  },
+  {
+    label: 'Provenance',
+    path: '/provenance',
+    isActive: (pathname) => pathname === '/provenance' || pathname === '/audit' || pathname === '/sessions' || pathname === '/experiments' || pathname === '/ml-dashboard'
+  }
+]
+
+const groupedNavigationItems = [
+  {
+    label: 'Analysis',
+    isActive: (pathname) => analysisItems.some((item) => item.isActive(pathname)),
+    items: analysisItems
+  },
+  {
+    label: 'Evidence',
+    isActive: (pathname) => evidenceItems.some((item) => item.isActive(pathname)),
+    items: evidenceItems
+  }
+]
+
 const Header = ({ currentTheme, onThemeToggle }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0()
+  const { loginWithRedirect, logout, isAuthenticated } = useAuth0()
   const isDark = currentTheme === 'g100'
-  const [isArchiveSwitcherOpen, setIsArchiveSwitcherOpen] = useState(false)
-  const [archiveView, setArchiveView] = useState(0)
   const [isSideNavExpanded, setIsSideNavExpanded] = useState(false)
 
   const handleNavClick = (path) => {
@@ -45,42 +101,40 @@ const Header = ({ currentTheme, onThemeToggle }) => {
         aria-label={isSideNavExpanded ? 'Close menu' : 'Open menu'}
         onClick={() => setIsSideNavExpanded(!isSideNavExpanded)}
         isActive={isSideNavExpanded}
+        isCollapsible
         aria-expanded={isSideNavExpanded}
       />
-      <HeaderName href="#" prefix="RCA PhD" onClick={(e) => { e.preventDefault(); navigate('/') }}>
-        Graham Newman
+      <HeaderName href="#" prefix="" onClick={(e) => { e.preventDefault(); navigate('/workbench') }}>
+        Graham Newman RCA PhD
       </HeaderName>
-      <HeaderNavigation aria-label="Research Navigation" className="desktop-nav">
-        <HeaderMenuItem
-          onClick={() => navigate('/')}
-          isCurrentPage={location.pathname === '/'}
-        >
-          Dashboard
-        </HeaderMenuItem>
-        <HeaderMenuItem
-          onClick={() => navigate('/tracer')}
-          isCurrentPage={location.pathname === '/tracer'}
-        >
-          Evidence tracer
-        </HeaderMenuItem>
-        <HeaderMenuItem
-          onClick={() => navigate('/sessions')}
-          isCurrentPage={location.pathname === '/sessions'}
-        >
-          Session recorder
-        </HeaderMenuItem>
-        <HeaderMenuItem
-          onClick={() => navigate('/experiments')}
-          isCurrentPage={location.pathname === '/experiments'}
-        >
-          Experimental log
-        </HeaderMenuItem>
-        <HeaderMenuItem
-          onClick={() => navigate('/ml-dashboard')}
-          isCurrentPage={location.pathname === '/ml-dashboard'}
-        >
-          ML dashboard
-        </HeaderMenuItem>
+      <HeaderNavigation aria-label="Research navigation">
+        {topLevelNavigationItems.map((item) => (
+          <HeaderMenuItem
+            key={item.label}
+            onClick={() => navigate(item.path)}
+            isActive={item.isActive(location.pathname)}
+          >
+            {item.label}
+          </HeaderMenuItem>
+        ))}
+        {groupedNavigationItems.map((group) => (
+          <HeaderMenu
+            key={group.label}
+            aria-label={group.label}
+            menuLinkName={group.label}
+            isActive={group.isActive(location.pathname)}
+          >
+            {group.items.map((item) => (
+              <HeaderMenuItem
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                isActive={item.isActive(location.pathname)}
+              >
+                {item.label}
+              </HeaderMenuItem>
+            ))}
+          </HeaderMenu>
+        ))}
       </HeaderNavigation>
       <HeaderGlobalBar>
         <HeaderGlobalAction
@@ -90,21 +144,6 @@ const Header = ({ currentTheme, onThemeToggle }) => {
         >
           {isDark ? <Light size={20} /> : <Asleep size={20} />}
         </HeaderGlobalAction>
-        {isAuthenticated && (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            height: '3rem',
-            padding: '0 1rem',
-            color: 'var(--cds-text-secondary)',
-            fontSize: '0.875rem',
-            whiteSpace: 'nowrap',
-            border: 'none',
-            outline: 'none'
-          }}>
-            Hello Graham
-          </div>
-        )}
         <HeaderGlobalAction
           aria-label={isAuthenticated ? 'Logout' : 'Login'}
           tooltipAlignment="end"
@@ -122,95 +161,36 @@ const Header = ({ currentTheme, onThemeToggle }) => {
         >
           <UserAvatar size={20} />
         </HeaderGlobalAction>
-        <HeaderGlobalAction
-          aria-label="DDR Archive"
-          tooltipAlignment="end"
-          isActive={isArchiveSwitcherOpen}
-          onClick={() => setIsArchiveSwitcherOpen(!isArchiveSwitcherOpen)}
-        >
-          <SwitcherIcon size={20} />
-        </HeaderGlobalAction>
       </HeaderGlobalBar>
-      <HeaderPanel aria-label="DDR Archive" expanded={isArchiveSwitcherOpen}>
-        <Switcher aria-label="DDR Archive">
-          <SwitcherItem 
-            aria-label="DDR Public Archive"
-            isSelected={archiveView === 0}
-            onClick={() => {
-              setArchiveView(0)
-              setIsArchiveSwitcherOpen(false)
-            }}
-          >
-            DDR Public Archive
-          </SwitcherItem>
-          <SwitcherDivider />
-          <SwitcherItem 
-            aria-label="DDR Archive Admin"
-            isSelected={archiveView === 1}
-            onClick={() => {
-              setArchiveView(1)
-              setIsArchiveSwitcherOpen(false)
-            }}
-          >
-            DDR Archive Admin
-          </SwitcherItem>
-        </Switcher>
-      </HeaderPanel>
       <SideNav
         aria-label="Side navigation"
         expanded={isSideNavExpanded}
+        isPersistent={false}
         onOverlayClick={() => setIsSideNavExpanded(false)}
-        className="mobile-nav"
       >
         <SideNavItems>
-          <SideNavLink
-            onClick={() => handleNavClick('/')}
-            isActive={location.pathname === '/'}
-          >
-            Dashboard
-          </SideNavLink>
-          <SideNavLink
-            onClick={() => handleNavClick('/tracer')}
-            isActive={location.pathname === '/tracer'}
-          >
-            Evidence tracer
-          </SideNavLink>
-          <SideNavLink
-            onClick={() => handleNavClick('/sessions')}
-            isActive={location.pathname === '/sessions'}
-          >
-            Session recorder
-          </SideNavLink>
-          <SideNavLink
-            onClick={() => handleNavClick('/experiments')}
-            isActive={location.pathname === '/experiments'}
-          >
-            Experimental log
-          </SideNavLink>
-          <SideNavLink
-            onClick={() => handleNavClick('/ml-dashboard')}
-            isActive={location.pathname === '/ml-dashboard'}
-          >
-            ML dashboard
-          </SideNavLink>
-          <SideNavMenu title="DDR Archive">
-            <SideNavMenuItem
-              onClick={() => {
-                setArchiveView(0)
-                setIsSideNavExpanded(false)
-              }}
+          {topLevelNavigationItems.map((item) => (
+            <SideNavLink
+              key={item.label}
+              onClick={() => handleNavClick(item.path)}
+              isActive={item.isActive(location.pathname)}
             >
-              DDR Public Archive
-            </SideNavMenuItem>
-            <SideNavMenuItem
-              onClick={() => {
-                setArchiveView(1)
-                setIsSideNavExpanded(false)
-              }}
-            >
-              DDR Archive Admin
-            </SideNavMenuItem>
-          </SideNavMenu>
+              {item.label}
+            </SideNavLink>
+          ))}
+          {groupedNavigationItems.map((group) => (
+            <SideNavMenu key={group.label} title={group.label} isActive={group.isActive(location.pathname)}>
+              {group.items.map((item) => (
+                <SideNavMenuItem
+                  key={item.label}
+                  onClick={() => handleNavClick(item.path)}
+                  isActive={item.isActive(location.pathname)}
+                >
+                  {item.label}
+                </SideNavMenuItem>
+              ))}
+            </SideNavMenu>
+          ))}
         </SideNavItems>
       </SideNav>
     </CarbonHeader>

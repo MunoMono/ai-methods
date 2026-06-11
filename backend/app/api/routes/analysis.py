@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class AnalysisRequest(BaseModel):
-    """Request model for epistemic drift analysis"""
+    """Request model for testamentary traces analysis"""
     query: str = Field(..., description="Research question or analytical query")
     num_context_chunks: int = Field(12, ge=1, le=20, description="Number of context chunks to retrieve")
     max_tokens: Optional[int] = Field(None, ge=50, le=512, description="Maximum tokens to generate")
@@ -72,7 +72,7 @@ def build_expanded_query(query: str) -> str:
 @router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_query(request: AnalysisRequest):
     """
-    Perform epistemic drift analysis on a research query using Granite LLM.
+    Perform testamentary traces analysis on a research query using Granite LLM.
     
     This endpoint:
     1. Retrieves relevant chunks using PostgreSQL full-text search
@@ -156,6 +156,8 @@ async def analyze_query(request: AnalysisRequest):
         
         return result
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Analysis failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -181,6 +183,15 @@ async def load_model():
     This call is intentionally synchronous so logs show the exact failure/hang point.
     """
     granite = get_granite_service()
+    status_info = granite.get_load_status()
+
+    if status_info.get("model_status") == "loading":
+        return {
+            "loaded": False,
+            "model_name": granite.model_name,
+            "device": granite.device,
+            "message": "Model load already in progress",
+        }
 
     if granite.model is not None and granite.tokenizer is not None:
         return {

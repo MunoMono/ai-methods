@@ -32,6 +32,72 @@ class ProvenanceService:
     3. Track inference back to source documents
     4. Version corpus for reproducibility
     """
+
+    @staticmethod
+    def _get_table_columns(db, table_name: str) -> set[str]:
+        rows = db.execute(text(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = :table_name
+            """
+        ), {"table_name": table_name}).fetchall()
+        return {row[0] for row in rows}
+
+    def _table_exists(self, db, table_name: str) -> bool:
+        return bool(self._get_table_columns(db, table_name))
+
+    def _get_chunk_record(self, db, chunk_id: str) -> Optional[Dict]:
+        available_columns = self._get_table_columns(db, 'document_chunks')
+        required_columns = [
+            'chunk_id',
+            'document_id',
+            'chunk_text',
+            'publication_year',
+            'source_page',
+            'source_section'
+        ]
+        optional_columns = ['citation', 'extraction_timestamp']
+
+        selected_columns = [column for column in required_columns if column in available_columns]
+        selected_columns.extend(column for column in optional_columns if column in available_columns)
+
+        if 'chunk_id' not in selected_columns or 'document_id' not in selected_columns:
+            return None
+
+        query = text(
+            f"SELECT {', '.join(selected_columns)} FROM document_chunks WHERE chunk_id = :chunk_id LIMIT 1"
+        )
+        row = db.execute(query, {"chunk_id": chunk_id}).mappings().first()
+        return dict(row) if row else None
+
+    @staticmethod
+    def _extract_pid(value: Optional[str]) -> Optional[str]:
+        if not value:
+            return None
+
+        if value.startswith('doc_pid_'):
+            return value[len('doc_pid_'):]
+
+        if value.startswith('pid_'):
+            parts = value.split('_')
+            if len(parts) >= 2 and parts[1].isdigit():
+                return parts[1]
+
+        return value if value.isdigit() else None
+
+    def _find_document_for_chunk(self, db, chunk: Dict) -> Optional[Document]:
+        document_id = chunk.get('document_id')
+        if document_id:
+            doc = db.query(Document).filter(Document.document_id == document_id).first()
+            if doc:
+                return doc
+
+        pid = self._extract_pid(chunk.get('chunk_id')) or self._extract_pid(document_id)
+        if pid:
+            return db.query(Document).filter(Document.pid == pid).first()
+
+        return None
     
     def build_chunk_citation(
         self,
@@ -53,17 +119,13 @@ class ProvenanceService:
             db = LocalSessionLocal()
         
         try:
-            chunk = db.query(DocumentChunk).filter(
-                DocumentChunk.chunk_id == chunk_id
-            ).first()
+            chunk = self._get_chunk_record(db, chunk_id)
             
             if not chunk:
                 return None
             
             # Get parent document
-            doc = db.query(Document).filter(
-                Document.document_id == chunk.document_id
-            ).first()
+            doc = self._find_document_for_chunk(db, chunk)
             
             if not doc or not doc.pid:
                 logger.warning(f"Chunk {chunk_id} has no PID linkage - cannot cite")
@@ -79,12 +141,12 @@ class ProvenanceService:
                 "year": doc.publication_year,
                 "creator": authority.get('creator_agent_label', 'Unknown'),
                 "institution": authority.get('rights_holders', 'Royal College of Art'),
-                "page": chunk.source_page,
-                "section": chunk.source_section,
+                "page": chunk.get('source_page'),
+                "section": chunk.get('source_section'),
                 "public_url": authority.get('public_uri', f"https://ddrarchive.org/id/record/{doc.pid}"),
                 "rights": authority.get('copyright_holder', 'Copyright © Royal College of Art'),
-                "excerpt": chunk.chunk_text[:200] + "..." if len(chunk.chunk_text) > 200 else chunk.chunk_text,
-                "extraction_date": chunk.extraction_timestamp.isoformat() if chunk.extraction_timestamp else None
+                "excerpt": chunk['chunk_text'][:200] + "..." if len(chunk['chunk_text']) > 200 else chunk['chunk_text'],
+                "extraction_date": chunk.get('extraction_timestamp').isoformat() if chunk.get('extraction_timestamp') else None
             }
             
             return citation
@@ -343,36 +405,34 @@ class ProvenanceService:
         """
         db = LocalSessionLocal()
         try:
-            chunk = db.query(DocumentChunk).filter(
-                DocumentChunk.chunk_id == chunk_id
-            ).first()
+            chunk = self._get_chunk_record(db, chunk_id)
             
             if not chunk:
                 return {"error": "Chunk not found"}
             
-            doc = db.query(Document).filter(
-                Document.document_id == chunk.document_id
-            ).first()
+            doc = self._find_document_for_chunk(db, chunk)
             
-            # Training runs that used this chunk
-            training_runs = db.query(TrainingRun).filter(
-                TrainingRun.chunk_ids_used.contains([chunk_id])
-            ).all()
+            training_runs = []
+            if self._table_exists(db, 'training_runs'):
+                training_runs = db.query(TrainingRun).filter(
+                    TrainingRun.chunk_ids_used.contains([chunk_id])
+                ).all()
             
-            # Inferences influenced by this chunk
-            inferences = db.query(InferenceLog).all()
-            influenced_inferences = [
-                inf for inf in inferences
-                if any(c['chunk_id'] == chunk_id for c in (inf.top_k_chunks or []))
-            ]
+            influenced_inferences = []
+            if self._table_exists(db, 'inference_logs'):
+                inferences = db.query(InferenceLog).all()
+                influenced_inferences = [
+                    inf for inf in inferences
+                    if any(c['chunk_id'] == chunk_id for c in (inf.top_k_chunks or []))
+                ]
             
             return {
                 "chunk": {
-                    "chunk_id": chunk.chunk_id,
-                    "text": chunk.chunk_text[:500] + "...",
-                    "page": chunk.source_page,
-                    "section": chunk.source_section,
-                    "extraction_date": chunk.extraction_timestamp.isoformat() if chunk.extraction_timestamp else None
+                    "chunk_id": chunk['chunk_id'],
+                    "text": chunk['chunk_text'][:500] + "...",
+                    "page": chunk.get('source_page'),
+                    "section": chunk.get('source_section'),
+                    "extraction_date": chunk.get('extraction_timestamp').isoformat() if chunk.get('extraction_timestamp') else None
                 },
                 "document": {
                     "pid": doc.pid if doc else None,

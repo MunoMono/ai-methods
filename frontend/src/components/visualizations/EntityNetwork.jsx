@@ -2,11 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Loading, Tag } from '@carbon/react';
 import { carbonColors, d3Scales, chartStyles, animations } from '../../utils/carbonD3Theme';
-import getApiBaseUrl from '../../utils/apiBaseUrl';
+import { fetchEntityNetwork } from '../../api/viz';
 import './EntityNetwork.scss';
 
 const EntityNetwork = () => {
-  const apiBaseUrl = getApiBaseUrl();
   const svgRef = useRef();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,8 +37,7 @@ const EntityNetwork = () => {
 
   const fetchEntityData = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/viz/entity-network`);
-      const entityData = await response.json();
+      const entityData = await fetchEntityNetwork();
       setData(entityData);
     } catch (error) {
       console.error('Failed to fetch entity network:', error);
@@ -96,8 +94,8 @@ const EntityNetwork = () => {
 
     // Size scale based on frequency
     const sizeScale = d3Scales.nodeSize(
-      Math.min(...filteredNodes.map(n => n.frequency)),
-      Math.max(...filteredNodes.map(n => n.frequency))
+      Math.min(...filteredNodes.map(n => n.frequency || 1)),
+      Math.max(...filteredNodes.map(n => n.frequency || 1))
     );
 
     // Force simulation

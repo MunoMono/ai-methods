@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import os
+import time
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -34,7 +35,10 @@ class GraniteService:
         self.max_new_tokens = int(os.getenv("GRANITE_MAX_TOKENS", "384"))
         self.temperature = float(os.getenv("GRANITE_TEMPERATURE", "0.2"))
         self.max_input_chars = int(os.getenv("GRANITE_MAX_INPUT_CHARS", "6000"))
-        self.timeout_seconds = int(os.getenv("GRANITE_TIMEOUT_SECONDS", "45"))
+        self.timeout_seconds = int(os.getenv("GRANITE_TIMEOUT_SECONDS", "180"))
+        self.load_timeout_seconds = int(os.getenv("OLLAMA_LOAD_TIMEOUT_SECONDS", "600"))
+        self.load_retry_count = int(os.getenv("OLLAMA_LOAD_RETRY_COUNT", "3"))
+        self.load_retry_delay_seconds = int(os.getenv("OLLAMA_LOAD_RETRY_DELAY_SECONDS", "5"))
         self._lock = asyncio.Lock()
 
         self._status = ModelStatus.NOT_LOADED
@@ -48,7 +52,8 @@ class GraniteService:
 
             logger.info(f"Validating Ollama runtime at {self.ollama_base_url}")
             logger.info(f"Target model tag: {self.model_name}")
-            with httpx.Client(timeout=30.0) as client:
+            load_timeout = httpx.Timeout(connect=10.0, read=self.load_timeout_seconds, write=self.load_timeout_seconds, pool=30.0)
+            with httpx.Client(timeout=load_timeout) as client:
                 health = client.get(f"{self.ollama_base_url}/api/tags")
                 health.raise_for_status()
                 tags = health.json().get("models", [])
@@ -56,11 +61,24 @@ class GraniteService:
 
                 if self.model_name not in installed:
                     logger.info(f"Model not present locally, pulling: {self.model_name}")
-                    pull_resp = client.post(
-                        f"{self.ollama_base_url}/api/pull",
-                        json={"name": self.model_name, "stream": False},
-                    )
-                    pull_resp.raise_for_status()
+                    for attempt in range(1, self.load_retry_count + 1):
+                        try:
+                            pull_resp = client.post(
+                                f"{self.ollama_base_url}/api/pull",
+                                json={"name": self.model_name, "stream": False},
+                            )
+                            pull_resp.raise_for_status()
+                            break
+                        except Exception:
+                            if attempt == self.load_retry_count:
+                                raise
+                            logger.warning(
+                                "Ollama model pull attempt %s/%s failed; retrying in %ss",
+                                attempt,
+                                self.load_retry_count,
+                                self.load_retry_delay_seconds,
+                            )
+                            time.sleep(self.load_retry_delay_seconds)
                     logger.info(f"Model pull completed: {self.model_name}")
 
             # Keep compatibility with existing route checks.
@@ -293,7 +311,7 @@ async def initialize_granite():
     """Initialize Granite service on application startup."""
     logger.info("Initializing Granite service...")
     service = get_granite_service()
-    success = service.load_model()
+    success = await asyncio.to_thread(service.load_model)
     if success:
         logger.info("✓ Granite service ready")
     else:
