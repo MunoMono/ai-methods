@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
+import { chartColors, chartStyles } from '../../utils/carbonD3Theme'
 
 const TrainingMetricsChart = () => {
   const svgRef = useRef()
@@ -43,16 +44,16 @@ const TrainingMetricsChart = () => {
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(x).ticks(7))
-      .attr('color', '#f4f4f4')
+      .attr('color', chartStyles.timeline.text.fill)
 
     svg.append('g')
       .call(d3.axisLeft(y))
-      .attr('color', '#f4f4f4')
+      .attr('color', chartStyles.timeline.text.fill)
 
     svg.append('path')
       .datum(data)
       .attr('fill', 'none')
-      .attr('stroke', '#0f62fe')
+      .attr('stroke', chartColors.query)
       .attr('stroke-width', 2)
       .attr('d', line)
 
@@ -63,7 +64,7 @@ const TrainingMetricsChart = () => {
       .attr('cx', d => x(d.epoch))
       .attr('cy', d => y(d.loss))
       .attr('r', 4)
-      .attr('fill', '#0f62fe')
+      .attr('fill', chartColors.query)
 
     svg.append('text')
       .attr('transform', 'rotate(-90)')
@@ -71,14 +72,14 @@ const TrainingMetricsChart = () => {
       .attr('x', 0 - (height / 2))
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
-      .attr('fill', '#f4f4f4')
+      .attr('fill', chartStyles.timeline.text.fill)
       .text('Training Loss')
 
     svg.append('text')
       .attr('x', width / 2)
       .attr('y', height + margin.bottom - 5)
       .style('text-anchor', 'middle')
-      .attr('fill', '#f4f4f4')
+      .attr('fill', chartStyles.timeline.text.fill)
       .text('Epoch')
 
   }, [])

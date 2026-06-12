@@ -1,5 +1,7 @@
-import { Grid, Column, Tile, DataTable, TableContainer, Table, TableHead, TableRow, TableHeader, TableBody, TableCell, Tag } from '@carbon/react'
+import { Tile, DataTable, TableContainer, Table, TableHead, TableRow, TableHeader, TableBody, TableCell, Tag } from '@carbon/react'
 import { Recording } from '@carbon/icons-react'
+import PageHeader from '../../components/layout/PageHeader'
+import { PageGrid, PageColumn as Column } from '../../components/layout/PageGrid'
 import '../../styles/pages/SessionRecorder.scss'
 
 const SessionRecorder = () => {
@@ -21,23 +23,20 @@ const SessionRecorder = () => {
   ]
 
   return (
-    <Grid narrow className="session-recorder">
-      <Column lg={16} md={8} sm={4}>
-        <div className="recorder__header">
-          <div>
-            <h1>Session recorder</h1>
-            <p className="recorder__description">
-              Inference logging for explainable AI. 
-              Every prediction links to source chunks for manual validation by supervisors.
-            </p>
-          </div>
-          <Tag type="green" size="md">
-            <Recording size={16} /> XAI enabled
-          </Tag>
-        </div>
+    <PageGrid className="session-recorder">
+      <Column>
+        <PageHeader
+          title="Session recorder"
+          description="Inference logging for explainable AI. Every prediction links to source chunks for manual validation by supervisors."
+          actions={(
+            <Tag type="green" size="md">
+              <Recording size={16} /> XAI enabled
+            </Tag>
+          )}
+        />
       </Column>
 
-      <Column lg={16} md={8} sm={4}>
+      <Column>
         <DataTable rows={rows} headers={headers}>
           {({ rows, headers, getTableProps, getHeaderProps, getRowProps }) => (
             <TableContainer title="Recent sessions">
@@ -65,7 +64,7 @@ const SessionRecorder = () => {
           )}
         </DataTable>
       </Column>
-    </Grid>
+    </PageGrid>
   )
 }
 

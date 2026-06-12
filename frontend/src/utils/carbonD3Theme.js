@@ -1,7 +1,13 @@
 /**
  * Carbon Design System + D3.js Theme Configuration
  * For RCA PhD visualization components
+ *
+ * D3 scales need resolved color strings, so Carbon palette values are centralized
+ * here as the single visualization source of truth. Do not introduce ad hoc hex
+ * colors in components; add or change palette values in this file only.
  */
+
+import * as d3 from 'd3'
 
 // Carbon color tokens
 export const carbonColors = {
@@ -67,7 +73,28 @@ export const carbonColors = {
     purpleToBlue: ['#8a3ffc', '#6929c4', '#491d8b', '#31135e', '#1c0f30', '#001d6c', '#002d9c', '#0043ce', '#0f62fe', '#4589ff'],
     redToGreen: ['#da1e28', '#fa4d56', '#ff832b', '#f1c21b', '#fddc69', '#b8f4b8', '#6fdc8c', '#42be65', '#24a148', '#198038'],
   }
-};
+}
+
+export const chartColors = {
+  axis: carbonColors.gray[30],
+  axisLabel: carbonColors.gray[30],
+  axisText: carbonColors.gray[40],
+  label: carbonColors.gray[10],
+  emptyState: carbonColors.gray[50],
+  tooltipBackground: carbonColors.gray[100],
+  tooltipText: carbonColors.gray[10],
+  selectionStroke: carbonColors.gray[10],
+  highlightStroke: carbonColors.status.warning,
+  plotStroke: carbonColors.gray[100],
+  query: carbonColors.primary.blue,
+  model: carbonColors.sequential.blue[4],
+  chunk: carbonColors.status.success,
+  document: carbonColors.primary.purple,
+  pid: carbonColors.status.warning,
+  answer: carbonColors.status.error,
+  emergent: carbonColors.status.success,
+  dialectical: carbonColors.primary.blue,
+}
 
 // Carbon typography
 export const carbonTypography = {
@@ -93,45 +120,50 @@ export const carbonTypography = {
     regular: 400,
     semibold: 600,
   }
-};
+}
 
 // D3 scale configurations using Carbon colors
 export const d3Scales = {
   // Categorical color scale
-  categorical: () => {
-    const d3 = require('d3');
-    return d3.scaleOrdinal()
-      .range(carbonColors.visualization);
+  categorical: (domain = []) => {
+    const scale = d3.scaleOrdinal()
+      .range(carbonColors.visualization)
+
+    if (domain.length > 0) {
+      scale.domain(domain)
+    }
+
+    return scale
   },
   
   // Sequential color scale
-  sequential: (scheme = 'blue') => {
-    const d3 = require('d3');
+  sequential: (scheme = 'blue', domain = [0, 1]) => {
     return d3.scaleSequential()
-      .interpolator(d3.interpolateRgbBasis(carbonColors.sequential[scheme]));
+      .domain(domain)
+      .interpolator(d3.interpolateRgbBasis(carbonColors.sequential[scheme]))
   },
   
   // Diverging color scale
-  diverging: (scheme = 'purpleToBlue') => {
-    const d3 = require('d3');
+  diverging: (scheme = 'purpleToBlue', domain = [-1, 0, 1]) => {
     return d3.scaleDiverging()
-      .interpolator(d3.interpolateRgbBasis(carbonColors.diverging[scheme]));
+      .domain(domain)
+      .interpolator(d3.interpolateRgbBasis(carbonColors.diverging[scheme]))
   },
   
   // Size scale for nodes
-  nodeSize: () => {
-    const d3 = require('d3');
+  nodeSize: (min = 0, max = 1, range = [3, 30]) => {
     return d3.scaleSqrt()
-      .range([3, 30]);
+      .domain([min, max])
+      .range(range)
   },
   
   // Opacity scale
-  opacity: () => {
-    const d3 = require('d3');
+  opacity: (domain = [0, 1], range = [0.2, 1.0]) => {
     return d3.scaleLinear()
-      .range([0.2, 1.0]);
+      .domain(domain)
+      .range(range)
   }
-};
+}
 
 // Chart styling presets
 export const chartStyles = {
@@ -141,18 +173,18 @@ export const chartStyles = {
       minRadius: 4,
       maxRadius: 24,
       strokeWidth: 2,
-      strokeColor: carbonColors.gray[100],
+      stroke: carbonColors.gray[100],
       hoverStrokeColor: carbonColors.primary.blue,
       selectedStrokeWidth: 3,
     },
     link: {
       strokeWidth: 1.5,
-      strokeColor: carbonColors.gray[40],
-      strokeOpacity: 0.6,
+      stroke: carbonColors.gray[40],
+      opacity: (weight = 1) => Math.max(0.12, Math.min(0.85, weight * 0.6)),
       hoverStrokeWidth: 3,
       hoverStrokeColor: carbonColors.primary.purple,
     },
-    labels: {
+    label: {
       fontSize: '11px',
       fontFamily: carbonTypography.fonts.sans,
       fill: carbonColors.gray[100],
@@ -166,6 +198,14 @@ export const chartStyles = {
       strokeWidth: 1,
       tickSize: 6,
       tickPadding: 8,
+    },
+    text: {
+      fill: chartColors.axisText,
+      fontSize: '12px',
+    },
+    label: {
+      fill: chartColors.axisLabel,
+      fontSize: '14px',
     },
     line: {
       strokeWidth: 2,
@@ -224,7 +264,7 @@ export const animations = {
       transform: 'scale(0.95)',
     }
   }
-};
+}
 
 // Responsive breakpoints (matching Carbon grid)
 export const breakpoints = {
@@ -233,7 +273,7 @@ export const breakpoints = {
   lg: 1056,  // Large
   xlg: 1312, // Extra large
   max: 1584, // Maximum
-};
+}
 
 // Layout spacing (Carbon spacing scale)
 export const spacing = {
@@ -250,13 +290,28 @@ export const spacing = {
   '11': '80px',
   '12': '96px',
   '13': '160px',
-};
+}
 
 // Utility functions
 export const utils = {
   // Get color by index with wrapping
   getColorByIndex: (index) => {
-    return carbonColors.visualization[index % carbonColors.visualization.length];
+    return carbonColors.visualization[index % carbonColors.visualization.length]
+  },
+
+  getClusterColorScale: (clusters = [], accessor = (cluster) => cluster?.theme || cluster) => {
+    const domain = clusters.map(accessor).filter(Boolean)
+    return d3Scales.categorical(domain)
+  },
+
+  getClusterColorMap: (clusters = [], accessor = (cluster) => cluster?.theme || cluster) => {
+    const scale = utils.getClusterColorScale(clusters, accessor)
+    return new Map(
+      clusters.map((cluster) => {
+        const key = accessor(cluster)
+        return [key, scale(key)]
+      })
+    )
   },
   
   // Get contrasting text color
@@ -267,25 +322,26 @@ export const utils = {
     const g = parseInt(color.substr(2, 2), 16);
     const b = parseInt(color.substr(4, 2), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? carbonColors.gray[100] : carbonColors.gray[10];
+    return luminance > 0.5 ? carbonColors.gray[100] : carbonColors.gray[10]
   },
   
   // Format number with SI suffix
   formatNumber: (num) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toString();
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
+    return num.toString()
   },
   
   // Truncate text with ellipsis
   truncate: (text, maxLength = 50) => {
-    if (text.length <= maxLength) return text;
-    return text.substr(0, maxLength - 3) + '...';
+    if (text.length <= maxLength) return text
+    return text.substr(0, maxLength - 3) + '...'
   }
-};
+}
 
 export default {
   colors: carbonColors,
+  chartColors,
   typography: carbonTypography,
   scales: d3Scales,
   styles: chartStyles,

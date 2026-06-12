@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import * as d3 from 'd3'
+import { chartColors, chartStyles, utils } from '../../utils/carbonD3Theme'
 import './UmapProjection.scss'
 
 const UmapProjection = ({ points, loading, errorState, selectedPoint, highlightedTrace, onSelectPoint }) => {
@@ -45,8 +46,10 @@ const UmapProjection = ({ points, loading, errorState, selectedPoint, highlighte
       .domain(yExtent[0] === yExtent[1] ? [yExtent[0] - 1, yExtent[1] + 1] : yExtent)
       .range([height - margin.bottom, margin.top])
 
-    const color = d3.scaleOrdinal(d3.schemeTableau10)
-      .domain([...new Set(points.map((point) => point.clusterLabel || point.sourceType || 'unclustered'))])
+    const color = utils.getClusterColorScale(
+      [...new Set(points.map((point) => point.clusterLabel || point.sourceType || 'unclustered'))],
+      (key) => key
+    )
 
     const plot = root.append('g')
 
@@ -62,7 +65,7 @@ const UmapProjection = ({ points, loading, errorState, selectedPoint, highlighte
       .attr('x', width / 2)
       .attr('y', height - 10)
       .attr('text-anchor', 'middle')
-      .attr('fill', '#c6c6c6')
+      .attr('fill', chartStyles.timeline.label.fill)
       .text('UMAP dimension 1')
 
     root.append('text')
@@ -70,7 +73,7 @@ const UmapProjection = ({ points, loading, errorState, selectedPoint, highlighte
       .attr('x', -height / 2)
       .attr('y', 16)
       .attr('text-anchor', 'middle')
-      .attr('fill', '#c6c6c6')
+      .attr('fill', chartStyles.timeline.label.fill)
       .text('UMAP dimension 2')
 
     const tooltip = d3.select(tooltipRef.current)
@@ -84,7 +87,7 @@ const UmapProjection = ({ points, loading, errorState, selectedPoint, highlighte
       .attr('cy', (point) => yScale(point.y))
       .attr('r', (point) => (point.id === selectedPoint?.id ? 8 : point.id === highlightedPointId ? 7 : 5))
       .attr('fill', (point) => color(point.clusterLabel || point.sourceType || 'unclustered'))
-      .attr('stroke', (point) => (point.id === selectedPoint?.id ? '#ffffff' : point.id === highlightedPointId ? '#f1c21b' : '#161616'))
+      .attr('stroke', (point) => (point.id === selectedPoint?.id ? chartColors.selectionStroke : point.id === highlightedPointId ? chartColors.highlightStroke : chartColors.plotStroke))
       .attr('stroke-width', (point) => (point.id === selectedPoint?.id || point.id === highlightedPointId ? 2.5 : 1))
       .on('mouseenter', (event, point) => {
         tooltip.style('opacity', 1)
@@ -131,7 +134,7 @@ const UmapProjection = ({ points, loading, errorState, selectedPoint, highlighte
   return (
     <div className="umap-projection">
       <svg ref={svgRef} className="umap-projection__svg" />
-      <div ref={tooltipRef} className="umap-projection__tooltip" />
+      <div ref={tooltipRef} className="viz-tooltip umap-projection__tooltip" />
     </div>
   )
 }

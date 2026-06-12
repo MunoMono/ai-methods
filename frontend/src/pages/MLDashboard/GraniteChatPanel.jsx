@@ -7,6 +7,7 @@ import {
   InlineLoading,
 } from '@carbon/react';
 import { SendAlt } from '@carbon/icons-react';
+import PanelHeader from '../../components/layout/PanelHeader';
 
 // Extract usable citation info from a context chunk
 function extractSourceInfo(chunk) {
@@ -143,13 +144,12 @@ const GraniteChatPanel = () => {
 
   return (
     <Tile className="granite-chat-tile">
-      <div className="granite-chat__header">
-        <div>
-          <h4>Granite archive chat</h4>
-          <p>Query the ingested transcripts directly from the dashboard.</p>
-        </div>
-        <Tag type="blue">IBM Granite</Tag>
-      </div>
+      <PanelHeader
+        title="Granite archive chat"
+        description="Query the ingested transcripts directly from the dashboard."
+        className="granite-chat__header"
+        actions={<Tag type="blue">IBM Granite</Tag>}
+      />
 
       <div className="granite-chat__history" ref={historyRef} aria-live="polite">
         {messages.map((message, index) => (

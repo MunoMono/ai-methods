@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
+import { chartColors, carbonColors } from '../../utils/carbonD3Theme'
 import '../../styles/components/EvidenceGraph.scss'
 
 const EvidenceGraph = ({ data }) => {
@@ -20,7 +21,7 @@ const EvidenceGraph = ({ data }) => {
         .attr('x', width / 2)
         .attr('y', height / 2)
         .attr('text-anchor', 'middle')
-        .attr('fill', '#8d8d8d')
+        .attr('fill', chartColors.emptyState)
         .style('font-size', '16px')
         .text('Submit a query to visualize evidence flow')
 
@@ -86,12 +87,12 @@ const EvidenceGraph = ({ data }) => {
       .filter((link) => link.source && link.target)
 
     const colorMap = {
-      query: '#0f62fe',
-      model: '#4589ff',
-      chunk: '#24a148',
-      document: '#8a3ffc',
-      pid: '#f1c21b',
-      answer: '#da1e28'
+      query: chartColors.query,
+      model: chartColors.model,
+      chunk: chartColors.chunk,
+      document: chartColors.document,
+      pid: chartColors.pid,
+      answer: chartColors.answer,
     }
 
     const linkGroup = svg.append('g').attr('class', 'evidence-graph__links')
@@ -101,7 +102,7 @@ const EvidenceGraph = ({ data }) => {
       .data(hydratedLinks)
       .enter()
       .append('line')
-      .attr('stroke', '#8d8d8d')
+      .attr('stroke', carbonColors.gray[50])
       .attr('stroke-opacity', 0.65)
       .attr('stroke-width', (d) => Math.max(1.5, d.value * 3))
       .attr('x1', (d) => d.source.x)
@@ -116,8 +117,8 @@ const EvidenceGraph = ({ data }) => {
       .attr('r', 22)
       .attr('cx', (d) => d.x)
       .attr('cy', (d) => d.y)
-      .attr('fill', (d) => colorMap[d.group] || '#6f6f6f')
-      .attr('stroke', '#ffffff')
+      .attr('fill', (d) => colorMap[d.group] || carbonColors.gray[60])
+      .attr('stroke', chartColors.selectionStroke)
       .attr('stroke-width', 1.5)
 
     nodeGroup.selectAll('text')
@@ -126,7 +127,7 @@ const EvidenceGraph = ({ data }) => {
       .append('text')
       .text((d) => d.label.length > 20 ? `${d.label.slice(0, 20)}...` : d.label)
       .attr('font-size', 12)
-      .attr('fill', '#f4f4f4')
+      .attr('fill', chartStyles.timeline.text.fill)
       .attr('text-anchor', 'middle')
       .attr('x', (d) => d.x)
       .attr('y', (d) => d.y + 36)

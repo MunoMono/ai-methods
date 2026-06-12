@@ -440,7 +440,7 @@ const EvidenceTracer = () => {
     <PageGrid className="evidence-tracer">
       <Column>
         <PageHeader
-          title="Source Interrogation"
+          title="Source interrogation"
           description="Ask research questions against retrieved archival chunks, then inspect the source stack, caveats, and provenance trail."
           actions={(
             <Tag type={provenanceStatus.type} size="md">

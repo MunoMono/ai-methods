@@ -1,6 +1,7 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { Loading } from '@carbon/react'
 import { useEffect } from 'react'
+import './LoginPage.scss'
 
 function LoginPage() {
   const { loginWithRedirect, isLoading } = useAuth0()
@@ -12,13 +13,7 @@ function LoginPage() {
   }, [isLoading, loginWithRedirect])
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      minHeight: '100vh',
-      background: '#161616'
-    }}>
+    <div className="app-loading-state login-page login-page--loading">
       <Loading withOverlay={false} />
     </div>
   )

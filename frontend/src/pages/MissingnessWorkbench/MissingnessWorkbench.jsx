@@ -23,6 +23,7 @@ import PanelHeader from '../../components/layout/PanelHeader'
 import { PageGrid, PageColumn as Column } from '../../components/layout/PageGrid'
 import { getMissingnessEvents, getMissingnessSummary, updateMissingnessEvent } from '../../api/missingness'
 import { downloadCsv } from '../../utils/workbenchExport'
+import './MissingnessWorkbench.scss'
 
 const typologyOptions = ['all', 'documentary', 'descriptive', 'retrieval', 'institutional', 'historiographic', 'computational']
 const statusOptions = ['open', 'reviewing', 'triaged', 'resolved']
@@ -192,7 +193,7 @@ const MissingnessWorkbench = () => {
             description="Filter missingness by documentary, descriptive, retrieval, institutional, historiographic, or computational type."
             actions={<Button kind="ghost" size="sm" renderIcon={Download} onClick={() => downloadCsv('absences-missingness-report.csv', exportRows)}>Export absences / missingness report</Button>}
           />
-          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          <div className="app-card-grid app-card-grid--responsive">
             <Select id="missingness-filter" labelText="Typology" value={filter} onChange={(event) => setFilter(event.target.value)}>
               {typologyOptions.map((option) => (
                 <SelectItem key={option} value={option} text={option === 'all' ? 'All types' : option} />
@@ -200,7 +201,7 @@ const MissingnessWorkbench = () => {
             </Select>
             <div>
               <strong>Reviewer workflow</strong>
-              <p style={{ marginTop: '0.5rem' }}>Use status and reviewer note fields to distinguish genuine archival absence from ingestion, retrieval, or description limits.</p>
+              <p className="app-text-muted missingness-workbench__review-note">Use status and reviewer note fields to distinguish genuine archival absence from ingestion, retrieval, or description limits.</p>
             </div>
           </div>
         </Tile>
@@ -209,9 +210,9 @@ const MissingnessWorkbench = () => {
       {(summary?.completeness_cards || []).map((card) => (
         <Column key={card.label} lg={4} md={4} sm={4}>
           <Tile>
-            <h3 style={{ marginTop: 0 }}>{card.label}</h3>
-            <p style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{card.value}</p>
-            <p style={{ marginBottom: 0 }}>{card.note}</p>
+            <h3 className="missingness-workbench__stat-title">{card.label}</h3>
+            <p className="missingness-workbench__stat-value">{card.value}</p>
+            <p className="app-copy-reset">{card.note}</p>
           </Tile>
         </Column>
       ))}
@@ -219,14 +220,14 @@ const MissingnessWorkbench = () => {
       <Column lg={6} md={8} sm={4}>
         <Tile>
           <PanelHeader title="Negative retrieval log" description="Queries that returned no result, weak context, or unresolved retrieval evidence. Absence here is analytic evidence, not automatic historical proof." />
-          <div style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="app-card-grid app-card-grid--dense">
             {negativeRetrievalLog.length > 0 ? negativeRetrievalLog.map((entry) => (
-              <div key={entry.id} style={{ borderBottom: '1px solid var(--cds-border-subtle)', paddingBottom: '0.75rem' }}>
-                <strong>{entry.query}</strong>
-                <p style={{ margin: '0.35rem 0' }}>{entry.outcome}</p>
-                <p style={{ margin: 0, color: 'var(--cds-text-secondary)' }}>{entry.note}</p>
+              <div key={entry.id} className="app-list-item">
+                <strong className="app-list-item__title">{entry.query}</strong>
+                <p className="app-list-item__body">{entry.outcome}</p>
+                <p className="app-list-item__note">{entry.note}</p>
               </div>
-            )) : <p style={{ margin: 0 }}>{loading ? 'Loading retrieval issues...' : 'No persisted retrieval missingness events yet.'}</p>}
+            )) : <p className="app-copy-reset">{loading ? 'Loading retrieval issues...' : 'No persisted retrieval missingness events yet.'}</p>}
           </div>
         </Tile>
       </Column>
@@ -237,8 +238,8 @@ const MissingnessWorkbench = () => {
           {selectedEvent ? (
             <>
               <p><strong>{selectedEvent.query_or_entity_or_field}</strong></p>
-              {selectedEvent.query_id && <p style={{ color: 'var(--cds-text-secondary)', margin: '0.35rem 0' }}>Source run: {selectedEvent.query_id}</p>}
-              <p style={{ color: 'var(--cds-text-secondary)' }}>{selectedEvent.evidence}</p>
+              {selectedEvent.query_id && <p className="app-list-item__meta">Source run: {selectedEvent.query_id}</p>}
+              <p className="app-text-muted">{selectedEvent.evidence}</p>
               <Select id="selected-missingness-status" labelText="Status" value={draftStatus} onChange={(event) => setDraftStatus(event.target.value)}>
                 {statusOptions.map((option) => (
                   <SelectItem key={option} value={option} text={option} />
@@ -251,13 +252,13 @@ const MissingnessWorkbench = () => {
                 value={draftReviewerNote}
                 onChange={(event) => setDraftReviewerNote(event.target.value)}
               />
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginTop: '1rem' }}>
+              <div className="app-actions-row app-actions-row--comfortable missingness-workbench__detail-actions">
                 <Button size="sm" onClick={handleSaveEvent} disabled={saveState === 'saving'}>Save review state</Button>
                 {saveState === 'saved' && <span>Saved</span>}
               </div>
             </>
           ) : (
-            <p style={{ margin: 0 }}>{loading ? 'Loading events...' : 'Select a missingness event from the table to review it.'}</p>
+            <p className="app-copy-reset">{loading ? 'Loading events...' : 'Select a missingness event from the table to review it.'}</p>
           )}
         </Tile>
       </Column>
@@ -287,7 +288,7 @@ const MissingnessWorkbench = () => {
                         key={key || row.id}
                         {...rowProps}
                         onClick={() => setSelectedEventId(row.id)}
-                        style={{ cursor: 'pointer', background: row.id === selectedEventId ? 'var(--cds-layer-selected)' : 'transparent' }}
+                        className={row.id === selectedEventId ? 'app-table-row--interactive app-table-row--selected' : 'app-table-row--interactive'}
                       >
                         {row.cells.map((cell) => (
                           <TableCell key={cell.id}>{cell.value}</TableCell>

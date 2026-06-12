@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Loading, Toggle } from '@carbon/react';
-import { carbonColors, d3Scales, chartStyles, animations, utils } from '../../utils/carbonD3Theme';
+import { carbonColors, chartColors, d3Scales, chartStyles, animations, utils } from '../../utils/carbonD3Theme';
+import { createVisualizationTooltip, hideVisualizationTooltip, showVisualizationTooltip } from '../../utils/d3Tooltip';
 import { fetchThemeDistribution } from '../../api/viz';
 import './ThemeDistribution.scss';
 
@@ -97,7 +98,7 @@ const ThemeDistribution = () => {
       .join('path')
       .attr('d', arc)
       .attr('fill', d => colorScale(d.data.theme))
-      .attr('stroke', '#fff')
+      .attr('stroke', chartColors.selectionStroke)
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
       .on('mouseover', function(event, d) {
@@ -108,17 +109,11 @@ const ThemeDistribution = () => {
 
         const percentage = ((d.data.count / d3.sum(data.themes, t => t.count)) * 100).toFixed(1);
         
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 1);
-        
-        tooltip.html(`
+        showVisualizationTooltip(tooltip, `
           <strong>${d.data.theme}</strong><br/>
           Documents: ${d.data.count}<br/>
           Percentage: ${percentage}%
-        `)
-          .style('left', (event.pageX + 10) + 'px')
-          .style('top', (event.pageY - 10) + 'px');
+        `, event)
       })
       .on('mouseout', function() {
         d3.select(this)
@@ -126,9 +121,7 @@ const ThemeDistribution = () => {
           .duration(animations.duration.fast)
           .attr('d', arc);
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 0);
+        hideVisualizationTooltip(tooltip)
       });
 
     // Animate on mount
@@ -200,16 +193,10 @@ const ThemeDistribution = () => {
           .duration(animations.duration.fast)
           .style('opacity', 0.8);
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 1);
-        
-        tooltip.html(`
+        showVisualizationTooltip(tooltip, `
           <strong>${d.theme}</strong><br/>
           Documents: ${d.count}
-        `)
-          .style('left', (event.pageX + 10) + 'px')
-          .style('top', (event.pageY - 10) + 'px');
+        `, event)
       })
       .on('mouseout', function() {
         d3.select(this)
@@ -217,9 +204,7 @@ const ThemeDistribution = () => {
           .duration(animations.duration.fast)
           .style('opacity', 1);
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 0);
+        hideVisualizationTooltip(tooltip)
       })
       .transition()
       .duration(animations.duration.slow)
@@ -268,19 +253,7 @@ const ThemeDistribution = () => {
   };
 
   const createTooltip = () => {
-    return d3.select('body')
-      .append('div')
-      .attr('class', 'theme-tooltip')
-      .style('opacity', 0)
-      .style('position', 'absolute')
-      .style('background-color', carbonColors.gray[100])
-      .style('color', carbonColors.gray[10])
-      .style('padding', '12px')
-      .style('border-radius', '4px')
-      .style('font-family', 'IBM Plex Sans')
-      .style('font-size', '14px')
-      .style('pointer-events', 'none')
-      .style('z-index', 1000);
+    return createVisualizationTooltip('theme-tooltip')
   };
 
   if (loading) {

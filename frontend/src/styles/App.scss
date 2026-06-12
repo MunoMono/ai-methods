@@ -1,29 +1,35 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/theme' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/type' as *;
+
+.ddr-theme {
+  --ddr-bg: var(--cds-background);
+  --ddr-surface: var(--cds-layer-01);
+  --ddr-surface-elevated: color-mix(in srgb, var(--cds-layer-02) 88%, var(--cds-layer-01) 12%);
+  --ddr-border-subtle: var(--cds-border-subtle-01);
+  --ddr-border-muted: color-mix(in srgb, var(--cds-border-subtle-01) 90%, var(--cds-layer-02) 10%);
+  --ddr-text-primary: var(--cds-text-primary);
+  --ddr-text-secondary: var(--cds-text-secondary);
+  min-height: 100vh;
+  background: var(--ddr-bg);
+}
 
 .app-content {
   min-height: calc(100vh - 3rem);
-  background-color: $layer-01;
+  background-color: var(--ddr-bg);
   padding: 0;
-  
-  // Mobile: tighter padding
-  @media (max-width: 671px) {
-    padding: $spacing-05 $spacing-04;
-  }
-  
-  // Tablet: medium padding
-  @include breakpoint(md) {
-    padding: $spacing-06 $spacing-05;
-  }
-  
-  // Desktop: comfortable padding
-  @include breakpoint(lg) {
-    padding: $spacing-07 $spacing-06;
-  }
-  
-  // Extra large: maximum padding
-  @include breakpoint(xlg) {
-    padding: $spacing-08 $spacing-07;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: $spacing-05;
+
+  &__email {
+    @include type-style('body-compact-01');
+    color: var(--cds-text-secondary);
   }
 }

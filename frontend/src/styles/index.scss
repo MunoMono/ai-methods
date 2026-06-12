@@ -3,12 +3,37 @@
 
 @use '@carbon/react';
 @use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/type' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--cds-background);
+  --app-shadow-premium-rest:
+    0 2px 8px color-mix(in srgb, black 5%, transparent),
+    0 8px 24px color-mix(in srgb, var(--cds-link-primary) 8%, transparent);
+  --app-shadow-premium-hover:
+    0 4px 16px color-mix(in srgb, black 8%, transparent),
+    0 12px 32px color-mix(in srgb, var(--cds-link-primary) 15%, transparent);
+  --app-shadow-overlay: 0 8px 24px color-mix(in srgb, black 20%, transparent);
+  --app-shadow-card-hover: 0 4px 12px color-mix(in srgb, black 15%, transparent);
+  --app-shadow-popover: 0 2px 6px color-mix(in srgb, black 10%, transparent);
+  --app-shadow-popover-hover: 0 2px 4px color-mix(in srgb, black 10%, transparent);
+  --app-shadow-login: 0 8px 32px color-mix(in srgb, black 40%, transparent);
+  --app-shadow-particle-glow: 0 0 20px var(--cds-interactive-01);
+}
 
 body {
   margin: 0;
   padding: 0;
+  min-width: 20rem;
+  min-height: 100vh;
+  background-color: var(--cds-background);
+  color: var(--cds-text-primary);
+  @include type-style('body-01');
   font-feature-settings: 'liga' 1, 'calt' 1;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden; // Prevent horizontal scroll on mobile
@@ -17,6 +42,7 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+  background-color: var(--cds-background);
   overflow-x: hidden; // Prevent horizontal scroll on mobile
 }
 
@@ -25,21 +51,64 @@ body {
   box-sizing: border-box;
 }
 
-// Smooth scroll behavior
-html {
-  scroll-behavior: smooth;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol,
+dl,
+blockquote,
+figure {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--cds-text-primary);
+  text-wrap: balance;
+}
+
+p,
+li,
+dd {
+  color: var(--cds-text-primary);
+}
+
+small,
+.secondary-copy {
+  color: var(--cds-text-secondary);
+}
+
+a {
+  color: var(--cds-link-primary);
+  text-decoration-color: transparent;
+  text-underline-offset: 0.125rem;
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+
+  &:hover {
+    color: var(--cds-link-primary-hover);
+    text-decoration-color: currentColor;
+  }
 }
 
 // Enhanced focus states
 *:focus-visible {
-  outline: 2px solid #0f62fe;
+  outline: 2px solid var(--cds-focus);
   outline-offset: 2px;
 }
 
 // Selection styling
 ::selection {
-  background-color: rgba(15, 98, 254, 0.2);
-  color: inherit;
+  background-color: var(--cds-highlight);
+  color: var(--cds-text-primary);
 }
 
 // IBM Carbon list styling - use dashes for bullets
@@ -86,7 +155,12 @@ ol {
 
 // Animated gradient text utility
 .gradient-text {
-  background: linear-gradient(135deg, #0f62fe, #4589ff, #8a3ffc);
+  background: linear-gradient(
+    135deg,
+    var(--cds-link-primary),
+    var(--cds-support-info),
+    var(--cds-icon-info)
+  );
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -101,16 +175,52 @@ ol {
 
 // Premium card elevation
 .premium-elevation {
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.05),
-    0 8px 24px rgba(15, 98, 254, 0.1);
+  box-shadow: var(--app-shadow-premium-rest);
   transition: all 0.3s cubic-bezier(0.2, 0, 0.38, 0.9);
   
   &:hover {
-    box-shadow: 
-      0 4px 16px rgba(0, 0, 0, 0.08),
-      0 12px 32px rgba(15, 98, 254, 0.15);
+    box-shadow: var(--app-shadow-premium-hover);
     transform: translateY(-2px);
+  }
+}
+
+.app-kicker {
+  @include type-style('label-02');
+  color: var(--cds-text-secondary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-section-title {
+  @include type-style('heading-04');
+  color: var(--cds-text-primary);
+}
+
+.app-body-copy {
+  @include type-style('body-01');
+  color: var(--cds-text-secondary);
+}
+
+.app-caption {
+  @include type-style('helper-text-01');
+  color: var(--cds-text-secondary);
+}
+
+.viz-tooltip {
+  position: absolute;
+  z-index: 1000;
+  max-width: 20rem;
+  padding: $spacing-04;
+  border: 1px solid var(--cds-border-subtle);
+  border-radius: 0.5rem;
+  background-color: var(--cds-layer-inverse);
+  color: var(--cds-text-inverse);
+  box-shadow: var(--app-shadow-overlay);
+  pointer-events: none;
+  @include type-style('body-compact-01');
+
+  strong {
+    color: var(--cds-text-inverse);
   }
 }
 

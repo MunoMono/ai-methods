@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Loading } from '@carbon/react';
-import { carbonColors, d3Scales, chartStyles, animations } from '../../utils/carbonD3Theme';
+import { carbonColors, chartColors, d3Scales, chartStyles, animations, carbonTypography } from '../../utils/carbonD3Theme';
+import { createVisualizationTooltip, hideVisualizationTooltip, removeVisualizationTooltip, showVisualizationTooltip } from '../../utils/d3Tooltip';
 import { fetchTemporalTrends } from '../../api/viz';
 import './TemporalTrends.scss';
 
@@ -118,7 +119,7 @@ const TemporalTrends = () => {
       .attr('x', -innerHeight / 2)
       .attr('text-anchor', 'middle')
       .style('font-size', '14px')
-      .style('fill', carbonColors.primary)
+      .style('fill', chartColors.query)
       .text('Documents');
 
     g.append('text')
@@ -127,7 +128,7 @@ const TemporalTrends = () => {
       .attr('x', innerHeight / 2)
       .attr('text-anchor', 'middle')
       .style('font-size', '14px')
-      .style('fill', carbonColors.purple)
+      .style('fill', chartColors.document)
       .text('PDFs');
 
     // Area generators
@@ -158,14 +159,14 @@ const TemporalTrends = () => {
     g.append('path')
       .datum(data.trends)
       .attr('class', 'area-docs')
-      .attr('fill', carbonColors.primary)
+      .attr('fill', chartColors.query)
       .attr('opacity', 0.2)
       .attr('d', areaDocs);
 
     g.append('path')
       .datum(data.trends)
       .attr('class', 'area-pdfs')
-      .attr('fill', carbonColors.purple)
+      .attr('fill', chartColors.document)
       .attr('opacity', 0.2)
       .attr('d', areaPdfs);
 
@@ -174,7 +175,7 @@ const TemporalTrends = () => {
       .datum(data.trends)
       .attr('class', 'line-docs')
       .attr('fill', 'none')
-      .attr('stroke', carbonColors.primary)
+      .attr('stroke', chartColors.query)
       .attr('stroke-width', 3)
       .attr('d', lineDocs);
 
@@ -182,7 +183,7 @@ const TemporalTrends = () => {
       .datum(data.trends)
       .attr('class', 'line-pdfs')
       .attr('fill', 'none')
-      .attr('stroke', carbonColors.purple)
+      .attr('stroke', chartColors.document)
       .attr('stroke-width', 3)
       .attr('d', linePdfs);
 
@@ -206,19 +207,7 @@ const TemporalTrends = () => {
       .attr('stroke-dashoffset', 0);
 
     // Tooltip
-    const tooltip = d3.select('body')
-      .append('div')
-      .attr('class', 'trends-tooltip')
-      .style('opacity', 0)
-      .style('position', 'absolute')
-      .style('background-color', carbonColors.gray[100])
-      .style('color', carbonColors.gray[10])
-      .style('padding', '12px')
-      .style('border-radius', '4px')
-      .style('font-family', 'IBM Plex Sans')
-      .style('font-size', '14px')
-      .style('pointer-events', 'none')
-      .style('z-index', 1000);
+    const tooltip = createVisualizationTooltip('trends-tooltip')
 
     // Points and interactions
     const pointsDocs = g.selectAll('.point-doc')
@@ -228,8 +217,8 @@ const TemporalTrends = () => {
       .attr('cx', d => xScale(d.parsedYear))
       .attr('cy', d => yScaleDocs(d.document_count))
       .attr('r', 0)
-      .attr('fill', carbonColors.primary)
-      .attr('stroke', '#fff')
+      .attr('fill', chartColors.query)
+      .attr('stroke', chartColors.selectionStroke)
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
       .on('mouseover', function(event, d) {
@@ -238,17 +227,11 @@ const TemporalTrends = () => {
           .duration(animations.duration.fast)
           .attr('r', 8);
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 1);
-        
-        tooltip.html(`
+        showVisualizationTooltip(tooltip, `
           <strong>${d.year}</strong><br/>
           Documents: ${d.document_count}<br/>
           PDFs: ${d.pdf_count}
-        `)
-          .style('left', (event.pageX + 10) + 'px')
-          .style('top', (event.pageY - 10) + 'px');
+        `, event)
       })
       .on('mouseout', function() {
         d3.select(this)
@@ -256,9 +239,7 @@ const TemporalTrends = () => {
           .duration(animations.duration.fast)
           .attr('r', 5);
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 0);
+        hideVisualizationTooltip(tooltip)
       });
 
     pointsDocs
@@ -273,8 +254,8 @@ const TemporalTrends = () => {
       .attr('transform', `translate(${width - margin.right + 20},${margin.top})`);
 
     const legendData = [
-      { label: 'Documents', color: carbonColors.primary },
-      { label: 'PDFs', color: carbonColors.purple }
+      { label: 'Documents', color: chartColors.query },
+      { label: 'PDFs', color: chartColors.document }
     ];
 
     legendData.forEach((item, i) => {
@@ -299,7 +280,7 @@ const TemporalTrends = () => {
 
     // Cleanup
     return () => {
-      tooltip.remove();
+      removeVisualizationTooltip(tooltip);
     };
   };
 

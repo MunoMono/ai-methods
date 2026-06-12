@@ -220,7 +220,7 @@ const VisualAnalytics = () => {
     <PageGrid className="visual-analytics-page">
       <Column>
         <PageHeader
-          title="Semantic Atlas"
+          title="Semantic atlas"
           description="Use embeddings, UMAP, clusters, proximity, anomaly, and metadata overlays as a visual hypothesis space, not as proof."
           actions={(
             <div className="visual-analytics-page__status-tags">

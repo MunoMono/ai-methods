@@ -1,3 +1,5 @@
+import { chartColors } from './carbonD3Theme'
+
 const toNumber = (value, fallback = 0) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
@@ -53,7 +55,7 @@ export const normalizeDocumentNetwork = (raw = {}) => {
     id: cluster.id || cluster.name || cluster.theme || 'uncategorized',
     theme: cluster.theme || cluster.name || cluster.id || 'uncategorized',
     description: cluster.description || '',
-    color: cluster.color || '#0f62fe',
+    color: cluster.color || chartColors.query,
     documents: toArray(cluster.documents)
       .map((document) => nodeLookup.get(document.id) || document)
       .filter(Boolean)
@@ -70,7 +72,7 @@ export const normalizeDocumentNetwork = (raw = {}) => {
     id: theme,
     theme,
     description: '',
-    color: '#0f62fe',
+    color: chartColors.query,
     documents
   }))
 
@@ -102,12 +104,12 @@ export const normalizeThemeDistribution = (raw = {}) => {
     ? sourceThemes.map((theme, index) => ({
       theme: theme.theme || theme.label || `Theme ${index + 1}`,
       count: toNumber(theme.count ?? theme.value),
-      color: theme.color || toArray(dataset.backgroundColor)[index] || '#0f62fe'
+      color: theme.color || toArray(dataset.backgroundColor)[index] || chartColors.query
     }))
     : labels.map((label, index) => ({
       theme: label,
       count: toNumber(toArray(dataset.data)[index]),
-      color: toArray(dataset.backgroundColor)[index] || '#0f62fe'
+      color: toArray(dataset.backgroundColor)[index] || chartColors.query
     }))
 
   return {

@@ -1,11 +1,23 @@
+@use '@carbon/react/scss/colors' as *;
+
 .login-page {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #161616 0%, #262626 50%, #161616 100%);
+  background:
+    radial-gradient(circle at 20% 20%, rgba($blue-50, 0.18), transparent 28%),
+    radial-gradient(circle at 80% 35%, rgba($cyan-40, 0.12), transparent 24%),
+    linear-gradient(135deg, $gray-100 0%, $cool-gray-90 52%, $gray-100 100%);
   overflow: hidden;
+
+  &--loading {
+    background:
+      radial-gradient(circle at 20% 20%, rgba($blue-50, 0.18), transparent 28%),
+      radial-gradient(circle at 80% 35%, rgba($cyan-40, 0.12), transparent 24%),
+      linear-gradient(135deg, $gray-100 0%, $cool-gray-90 52%, $gray-100 100%);
+  }
 }
 
 .login-background {
@@ -50,7 +62,7 @@
   height: 8px;
   background: var(--cds-interactive-01);
   border-radius: 50%;
-  box-shadow: 0 0 20px var(--cds-interactive-01);
+  box-shadow: var(--app-shadow-particle-glow);
   animation: float 20s ease-in-out infinite;
 }
 
@@ -130,12 +142,12 @@
 }
 
 .login-content {
-  background: rgba(22, 22, 22, 0.8);
+  background: rgba($gray-100, 0.82);
   backdrop-filter: blur(20px);
   padding: var(--cds-spacing-09);
   border: 1px solid var(--cds-border-subtle);
   border-radius: 4px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--app-shadow-login);
 }
 
 .login-brand {
@@ -163,17 +175,13 @@
 }
 
 .login-title {
-  font-size: var(--cds-heading-04-font-size);
-  font-weight: var(--cds-heading-04-font-weight);
-  line-height: var(--cds-heading-04-line-height);
-  letter-spacing: var(--cds-heading-04-letter-spacing);
+  @include type-style('heading-04');
   color: var(--cds-text-primary);
   margin: 0;
 }
 
 .login-subtitle {
-  font-size: var(--cds-body-02-font-size);
-  line-height: var(--cds-body-02-line-height);
+  @include type-style('body-02');
   color: var(--cds-text-secondary);
   margin-bottom: var(--cds-spacing-07);
   max-width: 360px;
@@ -194,7 +202,7 @@
   align-items: center;
   gap: var(--cds-spacing-03);
   color: var(--cds-text-secondary);
-  font-size: var(--cds-body-01-font-size);
+  @include type-style('body-01');
   padding: var(--cds-spacing-03) var(--cds-spacing-05);
   border-left: 2px solid var(--cds-border-subtle);
   transition: all 0.2s ease;
@@ -223,7 +231,7 @@
 }
 
 .login-footer {
-  font-size: var(--cds-label-01-font-size);
+  @include type-style('label-01');
   color: var(--cds-text-secondary);
   margin-top: var(--cds-spacing-07);
   padding-top: var(--cds-spacing-06);

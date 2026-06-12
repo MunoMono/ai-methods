@@ -1,0 +1,54 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/theme' as *;
+
+.corpus-panel {
+  &__intro {
+    margin-bottom: $spacing-05;
+  }
+
+  &__stack {
+    display: grid;
+    gap: $spacing-05;
+  }
+
+  &__tag-row {
+    margin-bottom: $spacing-05;
+  }
+
+  &__section-title {
+    @include type-style('heading-02');
+    margin: 0 0 $spacing-03;
+    color: $text-primary;
+  }
+
+  &__copy,
+  &__meta,
+  &__empty {
+    @include type-style('body-01');
+    overflow-wrap: anywhere;
+  }
+
+  &__copy,
+  &__meta {
+    margin: 0;
+  }
+
+  &__empty {
+    margin: 0;
+  }
+
+  &__meta {
+    color: $text-secondary;
+  }
+
+  &__list {
+    display: grid;
+    gap: $spacing-03;
+  }
+
+  &__suggestion-label {
+    margin-bottom: $spacing-02;
+    font-weight: 600;
+  }
+}

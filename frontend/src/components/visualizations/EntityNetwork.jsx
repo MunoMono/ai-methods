@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Loading, Tag } from '@carbon/react';
-import { carbonColors, d3Scales, chartStyles, animations } from '../../utils/carbonD3Theme';
+import { carbonColors, chartColors, d3Scales, chartStyles, animations, carbonTypography } from '../../utils/carbonD3Theme';
+import { createVisualizationTooltip, hideVisualizationTooltip, removeVisualizationTooltip, showVisualizationTooltip } from '../../utils/d3Tooltip';
 import { fetchEntityNetwork } from '../../api/viz';
 import './EntityNetwork.scss';
 
@@ -85,11 +86,11 @@ const EntityNetwork = () => {
 
     // Color scale by entity type
     const typeColors = {
-      'PERSON': carbonColors.primary,
-      'ORG': carbonColors.purple,
-      'CONCEPT': carbonColors.teal,
-      'METHOD': carbonColors.cyan,
-      'LOCATION': carbonColors.magenta
+      'PERSON': carbonColors.primary.blue,
+      'ORG': carbonColors.primary.purple,
+      'CONCEPT': carbonColors.primary.teal,
+      'METHOD': carbonColors.primary.cyan,
+      'LOCATION': carbonColors.primary.magenta
     };
 
     // Size scale based on frequency
@@ -126,7 +127,7 @@ const EntityNetwork = () => {
       .join('circle')
       .attr('r', d => sizeScale(d.frequency))
       .attr('fill', d => typeColors[d.entity_type] || carbonColors.gray[50])
-      .attr('stroke', '#fff')
+      .attr('stroke', chartColors.selectionStroke)
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
       .call(drag(simulation));
@@ -146,19 +147,7 @@ const EntityNetwork = () => {
       .style('font-weight', '500');
 
     // Tooltip
-    const tooltip = d3.select('body')
-      .append('div')
-      .attr('class', 'entity-tooltip')
-      .style('opacity', 0)
-      .style('position', 'absolute')
-      .style('background-color', carbonColors.gray[100])
-      .style('color', carbonColors.gray[10])
-      .style('padding', '12px')
-      .style('border-radius', '4px')
-      .style('font-family', 'IBM Plex Sans')
-      .style('font-size', '14px')
-      .style('pointer-events', 'none')
-      .style('z-index', 1000);
+    const tooltip = createVisualizationTooltip('entity-tooltip')
 
     // Node interactions
     node
@@ -169,18 +158,12 @@ const EntityNetwork = () => {
           .attr('r', sizeScale(d.frequency) * 1.3)
           .attr('stroke-width', 3);
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 1);
-        
-        tooltip.html(`
+        showVisualizationTooltip(tooltip, `
           <strong>${d.entity_text}</strong><br/>
           Type: ${d.entity_type}<br/>
           Frequency: ${d.frequency}<br/>
           Documents: ${d.document_count}
-        `)
-          .style('left', (event.pageX + 10) + 'px')
-          .style('top', (event.pageY - 10) + 'px');
+        `, event)
 
         // Highlight connected entities
         const connectedIds = new Set();
@@ -208,9 +191,7 @@ const EntityNetwork = () => {
           .attr('r', sizeScale(d.frequency))
           .attr('stroke-width', 2);
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 0);
+        hideVisualizationTooltip(tooltip)
 
         node.style('opacity', 1);
         link.style('opacity', 0.6);
@@ -261,7 +242,7 @@ const EntityNetwork = () => {
 
     // Cleanup
     return () => {
-      tooltip.remove();
+      removeVisualizationTooltip(tooltip);
     };
   };
 

@@ -1,0 +1,11 @@
+@use '@carbon/react/scss/spacing' as *;
+
+.audit-workbench {
+  &__claims-list {
+    margin-top: $spacing-05;
+  }
+
+  &__status-card {
+    min-height: 100%;
+  }
+}

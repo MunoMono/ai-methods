@@ -1,7 +1,27 @@
+@use '@carbon/react/scss/type' as *;
+
 .umap-point-detail {
   margin-top: 1.5rem;
-  background: rgba(22, 22, 22, 0.78);
-  border: 1px solid rgba(69, 137, 255, 0.16);
+  background: color-mix(in srgb, var(--cds-layer-01) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cds-border-subtle) 92%, transparent);
+
+  h3,
+  h4 {
+    color: var(--cds-text-primary);
+  }
+
+  h3 {
+    @include type-style('heading-03');
+    margin: 0 0 1rem;
+  }
+
+  h4 {
+    @include type-style('heading-01');
+  }
+
+  p {
+    color: var(--cds-text-secondary);
+  }
 
   &__tags,
   &__actions {
@@ -19,8 +39,8 @@
   &__excerpt {
     margin-bottom: 1rem;
     padding: 0.875rem;
-    border-left: 3px solid rgba(69, 137, 255, 0.5);
-    background: rgba(255, 255, 255, 0.04);
+    border-left: 3px solid color-mix(in srgb, var(--cds-link-primary) 56%, transparent);
+    background: color-mix(in srgb, var(--cds-layer-02) 44%, transparent);
     line-height: 1.6;
   }
 
@@ -28,7 +48,7 @@
     margin-bottom: 1rem;
     padding: 0.875rem;
     border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, var(--cds-layer-02) 38%, transparent);
 
     h4 {
       margin: 0 0 0.75rem;
@@ -38,6 +58,6 @@
   &__limit,
   &__limits p {
     margin: 0.5rem 0 0;
-    color: rgba(244, 244, 244, 0.88);
+    color: var(--cds-text-primary);
   }
 }

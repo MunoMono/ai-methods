@@ -4,13 +4,8 @@
 @use '@carbon/react/scss/breakpoint' as *;
 
 .ml-dashboard {
-  padding: $spacing-06;
   background-color: $layer-01;
   min-height: 100vh;
-
-  @include breakpoint-down(md) {
-    padding: $spacing-05 $spacing-04;
-  }
 }
 
 .ml-dashboard-loading {
@@ -21,31 +16,7 @@
 }
 
 .dashboard-header {
-  margin-bottom: $spacing-06;
-
-  .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: $spacing-05 0;
-    border-bottom: 1px solid $border-subtle-01;
-
-    @include breakpoint-down(md) {
-      flex-direction: column;
-      gap: $spacing-05;
-    }
-  }
-
-  h1 {
-    @include type-style('heading-05');
-    color: $text-primary;
-    margin-bottom: $spacing-02;
-  }
-
-  .header-subtitle {
-    @include type-style('body-01');
-    color: $text-secondary;
-  }
+  margin-bottom: $spacing-01;
 }
 
 .stats-tile {
@@ -54,10 +25,11 @@
   display: flex;
   gap: $spacing-05;
   transition: all 0.2s ease;
+  border: 1px solid $border-subtle-01;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: $border-interactive;
   }
 
   .stats-icon {
@@ -110,16 +82,9 @@
   padding: $spacing-06;
   min-height: 600px;
   background-color: $layer-01;
+  border: 1px solid $border-subtle-01;
 
-  h4 {
-    @include type-style('heading-03');
-    color: $text-primary;
-    margin-bottom: $spacing-03;
-  }
-
-  .tile-description {
-    @include type-style('body-01');
-    color: $text-secondary;
+  &__header {
     margin-bottom: $spacing-06;
     padding-bottom: $spacing-05;
     border-bottom: 1px solid $border-subtle-01;
@@ -128,10 +93,9 @@
 
 .activity-tile {
   padding: $spacing-06;
+  border: 1px solid $border-subtle-01;
 
-  h4 {
-    @include type-style('heading-03');
-    color: $text-primary;
+  &__header {
     margin-bottom: $spacing-05;
   }
 
@@ -157,25 +121,11 @@
 .granite-chat-tile {
   padding: $spacing-06;
   margin-bottom: $spacing-07;
+  border: 1px solid $border-subtle-01;
 }
 
 .granite-chat__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: $spacing-05;
   margin-bottom: $spacing-05;
-
-  h4 {
-    @include type-style('heading-03');
-    color: $text-primary;
-    margin-bottom: $spacing-02;
-  }
-
-  p {
-    @include type-style('body-01');
-    color: $text-secondary;
-  }
 }
 
 .granite-chat__history {

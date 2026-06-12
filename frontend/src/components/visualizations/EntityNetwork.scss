@@ -34,10 +34,10 @@
   gap: $spacing-03;
   align-items: center;
   z-index: 10;
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: color-mix(in srgb, var(--cds-layer-01) 96%, transparent);
   padding: $spacing-04;
   border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--app-shadow-popover);
 
   .filter-label {
     @include type-style('label-01');
@@ -52,7 +52,7 @@
 
     &:hover {
       transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--app-shadow-popover-hover);
     }
   }
 }

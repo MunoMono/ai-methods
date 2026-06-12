@@ -162,7 +162,7 @@ const ClaimsWorkbench = () => {
     <PageGrid className="claims-workbench">
       <Column>
         <PageHeader
-          title="Claims & Evidence"
+          title="Claims and evidence"
           description="Tie interpretive claims to source chunks, support levels, caveats, and reviewer status before export."
           actions={(
             <Tag type="green" size="md">
@@ -204,7 +204,7 @@ const ClaimsWorkbench = () => {
             title="Claim table"
             description="Select a claim to inspect evidence coverage, support level, caveats, and reviewer status."
             actions={(
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div className="app-actions-row">
                 <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportCsv}>Export claim-evidence CSV</Button>
                 <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportMarkdown}>Export claim-evidence Markdown</Button>
               </div>
@@ -223,7 +223,7 @@ const ClaimsWorkbench = () => {
               </TableHead>
               <TableBody>
                 {claims.map((claim) => (
-                  <TableRow key={claim.claim_id} onClick={() => setSelectedClaimId(claim.claim_id)} style={{ cursor: 'pointer', background: claim.claim_id === selectedClaimId ? 'var(--cds-layer-selected)' : 'transparent' }}>
+                  <TableRow key={claim.claim_id} onClick={() => setSelectedClaimId(claim.claim_id)} className={claim.claim_id === selectedClaimId ? 'app-table-row--interactive app-table-row--selected' : 'app-table-row--interactive'}>
                     <TableCell className="claims-workbench__claim-cell">{claim.claim_text}</TableCell>
                     <TableCell>{claim.support_level}</TableCell>
                     <TableCell>{claim.evidence_chunk_ids.length}</TableCell>

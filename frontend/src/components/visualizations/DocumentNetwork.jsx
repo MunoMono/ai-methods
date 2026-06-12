@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Loading } from '@carbon/react';
-import { carbonColors, d3Scales, chartStyles, animations } from '../../utils/carbonD3Theme';
+import { carbonColors, chartColors, d3Scales, chartStyles, animations, carbonTypography, utils } from '../../utils/carbonD3Theme';
+import { createVisualizationTooltip, hideVisualizationTooltip, removeVisualizationTooltip, showVisualizationTooltip } from '../../utils/d3Tooltip';
 import { fetchDocumentNetwork } from '../../api/viz';
 import './DocumentNetwork.scss';
 
@@ -10,6 +11,13 @@ const DocumentNetwork = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const clusterColorMap = useMemo(() => {
+    if (!data?.clusters?.length) {
+      return new Map();
+    }
+
+    return utils.getClusterColorMap(data.clusters, (cluster) => cluster.theme);
+  }, [data]);
 
   useEffect(() => {
     fetchNetworkData();
@@ -139,19 +147,7 @@ const DocumentNetwork = () => {
       .style('opacity', 0);
 
     // Tooltip
-    const tooltip = d3.select('body')
-      .append('div')
-      .attr('class', 'network-tooltip')
-      .style('opacity', 0)
-      .style('position', 'absolute')
-      .style('background-color', carbonColors.gray[100])
-      .style('color', carbonColors.gray[10])
-      .style('padding', '12px')
-      .style('border-radius', '4px')
-      .style('font-family', 'IBM Plex Sans')
-      .style('font-size', '14px')
-      .style('pointer-events', 'none')
-      .style('z-index', 1000);
+    const tooltip = createVisualizationTooltip('network-tooltip')
 
     // Node interactions
     node
@@ -173,18 +169,12 @@ const DocumentNetwork = () => {
           c.documents.some(doc => doc.id === d.id)
         );
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 1);
-        
-        tooltip.html(`
+        showVisualizationTooltip(tooltip, `
           <strong>${d.title}</strong><br/>
           PDFs: ${d.pdf_count}<br/>
           Year: ${d.year || 'N/A'}<br/>
           Cluster: ${cluster?.theme || 'N/A'}
-        `)
-          .style('left', (event.pageX + 10) + 'px')
-          .style('top', (event.pageY - 10) + 'px');
+        `, event)
 
         // Highlight connected nodes
         const connectedNodeIds = new Set();
@@ -214,9 +204,7 @@ const DocumentNetwork = () => {
           .duration(animations.duration.fast)
           .style('opacity', 0);
 
-        tooltip.transition()
-          .duration(animations.duration.fast)
-          .style('opacity', 0);
+        hideVisualizationTooltip(tooltip)
 
         node.style('opacity', 1);
         link.style('opacity', l => chartStyles.network.link.opacity(l.weight));
@@ -270,7 +258,7 @@ const DocumentNetwork = () => {
 
     // Cleanup tooltip on unmount
     return () => {
-      tooltip.remove();
+      removeVisualizationTooltip(tooltip);
     };
   };
 
@@ -297,10 +285,9 @@ const DocumentNetwork = () => {
         <h5>Clusters</h5>
         {data.clusters.map((cluster, index) => (
           <div key={cluster.id || cluster.theme || index} className="legend-item">
-            <div 
-              className="legend-color" 
-              style={{ backgroundColor: d3Scales.categorical(data.clusters.map(c => c.theme))(cluster.theme) }}
-            />
+            <svg className="legend-color" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="8" cy="8" r="7" fill={clusterColorMap.get(cluster.theme) || carbonColors.gray[50]} />
+            </svg>
             <span>{cluster.theme} ({cluster.documents.length})</span>
           </div>
         ))}

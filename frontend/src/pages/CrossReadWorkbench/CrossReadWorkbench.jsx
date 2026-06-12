@@ -25,6 +25,7 @@ import PageHeader from '../../components/layout/PageHeader'
 import PanelHeader from '../../components/layout/PanelHeader'
 import { PageGrid, PageColumn as Column } from '../../components/layout/PageGrid'
 import { downloadFile } from '../../utils/workbenchExport'
+import './CrossReadWorkbench.scss'
 
 const relationOptions = ['supports', 'complicates', 'contradicts', 'no-documentary-trace']
 const sourceTypeOptions = ['oral_history', 'interview', 'field_note', 'researcher_note', 'mock_dev']
@@ -311,7 +312,7 @@ const CrossReadWorkbench = () => {
             title="Analytical output"
             description="This view produces a testimony-record map with explicit relation annotations, interpretive notes, and exportable candidate chunk links."
             actions={(
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div className="app-actions-row">
                 <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportCsv}>Export testimony-record CSV</Button>
                 <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportMarkdown}>Export testimony-record Markdown</Button>
               </div>
@@ -392,7 +393,7 @@ const CrossReadWorkbench = () => {
             value={passageForm.memory_position_note}
             onChange={(event) => setPassageForm((current) => ({ ...current, memory_position_note: event.target.value }))}
           />
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+          <div className="app-actions-row app-actions-row--comfortable cross-read-workbench__action-group">
             <Button size="sm" onClick={handleCreatePassage} disabled={savingPassage || !passageForm.passage_text.trim()}>
               Create passage
             </Button>
@@ -412,7 +413,7 @@ const CrossReadWorkbench = () => {
       <Column lg={5} md={4} sm={4}>
         <Tile>
           <PanelHeader title="Passage-to-record retrieval results" description="Candidate archival chunks surfaced by the current testimony or interpretive probe." />
-          <div style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="app-card-grid app-card-grid--dense">
             {candidateMappings.length > 0 ? candidateMappings.map((mapping) => {
               const metadata = mapping.source_metadata_json || {}
               const title = metadata.title || (mapping.relation_type === 'no_documentary_trace' ? 'No documentary trace' : 'Archival record candidate')
@@ -424,26 +425,21 @@ const CrossReadWorkbench = () => {
                 <div
                   key={mapping.mapping_id}
                   onClick={() => setSelectedMappingId(mapping.mapping_id)}
-                  style={{
-                    borderBottom: '1px solid var(--cds-border-subtle)',
-                    paddingBottom: '0.75rem',
-                    cursor: 'pointer',
-                    background: mapping.mapping_id === selectedMappingId ? 'var(--cds-layer-selected)' : 'transparent'
-                  }}
+                  className={mapping.mapping_id === selectedMappingId ? 'app-list-item app-list-item--interactive app-list-item--selected' : 'app-list-item app-list-item--interactive'}
                 >
-                  <strong>{title}</strong>
-                  <p style={{ margin: '0.35rem 0' }}>{excerpt}</p>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <strong className="app-list-item__title cross-read-workbench__mapping-title">{title}</strong>
+                  <p className="app-list-item__body">{excerpt}</p>
+                  <div className="app-tag-row">
                     <Tag type="blue">{metadata.pid || 'PID unavailable'}</Tag>
                     <Tag type="gray">{mapping.chunk_id || 'No chunk returned'}</Tag>
                     <Tag type="purple">{mapping.relation_type === 'no_documentary_trace' ? 'no-documentary-trace' : mapping.relation_type}</Tag>
                   </div>
-                  <p style={{ marginTop: '0.5rem', color: 'var(--cds-text-secondary)' }}>
+                  <p className="app-list-item__note">
                     Query run: {mapping.query_id || 'Unavailable'}
                   </p>
                 </div>
               )
-            }) : <p style={{ margin: 0 }}>{loading ? 'Loading persisted mappings...' : 'No persisted mappings yet. Run the selected passage as a retrieval probe.'}</p>}
+            }) : <p className="app-copy-reset">{loading ? 'Loading persisted mappings...' : 'No persisted mappings yet. Run the selected passage as a retrieval probe.'}</p>}
           </div>
         </Tile>
       </Column>
@@ -470,12 +466,12 @@ const CrossReadWorkbench = () => {
             onChange={(event) => setMappingForm((current) => ({ ...current, reviewer_note: event.target.value }))}
             placeholder="Record how this passage sits in testimony, interpretation, contradiction, or documentary absence."
           />
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+          <div className="app-tag-row cross-read-workbench__action-group">
             <Tag type="green">Passage status: {selectedPassage?.status || 'draft'}</Tag>
             <Tag type="purple">Candidate mappings: {candidateMappings.length}</Tag>
             {selectedMapping?.query_id && <Tag type="cyan">Run: {selectedMapping.query_id}</Tag>}
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+          <div className="app-actions-row app-actions-row--comfortable cross-read-workbench__action-group">
             <Button size="sm" onClick={handleSaveMapping} disabled={!selectedMapping?.mapping_id || savingMapping}>Save mapping annotation</Button>
             {selectedMapping?.citation_text && <Tag type="gray">Citation stored</Tag>}
             {selectedMapping?.provenance_json ? <Tag type="green">Provenance stored</Tag> : <Tag type="gray">Provenance unavailable</Tag>}

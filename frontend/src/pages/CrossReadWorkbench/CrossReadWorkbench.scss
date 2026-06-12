@@ -1,0 +1,11 @@
+@use '@carbon/react/scss/spacing' as *;
+
+.cross-read-workbench {
+  &__action-group {
+    margin-top: $spacing-05;
+  }
+
+  &__mapping-title {
+    overflow-wrap: anywhere;
+  }
+}

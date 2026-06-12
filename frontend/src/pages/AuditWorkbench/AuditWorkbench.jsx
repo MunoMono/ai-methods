@@ -11,10 +11,7 @@ import { getGraniteLoadStatus } from '../../api/granite'
 import { getMissingnessEvents, getMissingnessSummary } from '../../api/missingness'
 import { exportQueryRunJson, exportQueryRunMarkdown, getQueryRun, getQueryRuns } from '../../api/queryRuns'
 import { downloadFile } from '../../utils/workbenchExport'
-
-const sectionGridStyle = { display: 'grid', gap: '0.75rem' }
-const itemStyle = { borderBottom: '1px solid var(--cds-border-subtle)', paddingBottom: '0.75rem' }
-const statusGridStyle = { display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))' }
+import './AuditWorkbench.scss'
 
 const AuditWorkbench = () => {
   const [backendHealth, setBackendHealth] = useState(null)
@@ -255,12 +252,12 @@ const AuditWorkbench = () => {
       <Column>
         <Tile>
           <PanelHeader title="Apparatus status" description="Live counts and readiness signals from the working apparatus." />
-          <div style={statusGridStyle}>
+          <div className="app-card-grid app-card-grid--dense app-card-grid--responsive">
             {apparatusCards.map((card) => (
-              <div key={card.label} style={{ border: '1px solid var(--cds-border-subtle)', padding: '1rem' }}>
-                <strong>{card.label}</strong>
-                <p style={{ margin: '0.35rem 0', fontSize: '1.25rem' }}>{card.value}</p>
-                <p style={{ margin: 0, color: 'var(--cds-text-secondary)' }}>{card.note}</p>
+              <div key={card.label} className="app-stat-card audit-workbench__status-card">
+                <strong className="app-stat-card__title">{card.label}</strong>
+                <p className="app-stat-card__value">{card.value}</p>
+                <p className="app-stat-card__note">{card.note}</p>
               </div>
             ))}
           </div>
@@ -269,19 +266,19 @@ const AuditWorkbench = () => {
 
       <Column lg={6} md={8} sm={4}>
         <Tile>
-          <PanelHeader title="Recent Source Interrogations" description="Recent query runs with persisted retrieval-trail exports." />
+          <PanelHeader title="Recent source interrogations" description="Recent query runs with persisted retrieval-trail exports." />
           {loading ? (
             <InlineNotification lowContrast kind="info" title="Loading query runs" subtitle="Fetching persisted source interrogations and retrieval-trail exports." />
           ) : queryRuns.length === 0 ? (
-            <InlineNotification lowContrast kind="info" title="No query runs yet" subtitle="Run a Source Interrogation to surface persisted retrieval trails here." />
+            <InlineNotification lowContrast kind="info" title="No query runs yet" subtitle="Run a source interrogation to surface persisted retrieval trails here." />
           ) : (
-            <div style={sectionGridStyle}>
+            <div className="app-card-grid app-card-grid--dense">
               {queryRuns.map((run) => (
-                <div key={run.query_id} style={itemStyle}>
-                  <strong>{run.prompt}</strong>
-                  <p style={{ margin: '0.35rem 0' }}>Model: {run.model || 'Unavailable'} | Retrieved chunks: {run.retrieved_chunk_count} | Failed/partial: {run.failed_or_partial ? 'yes' : 'no'}</p>
-                  <p style={{ margin: '0.35rem 0', color: 'var(--cds-text-secondary)' }}>{run.created_at || 'Timestamp unavailable'}</p>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div key={run.query_id} className="app-list-item">
+                  <strong className="app-list-item__title">{run.prompt}</strong>
+                  <p className="app-list-item__body">Model: {run.model || 'Unavailable'} | Retrieved chunks: {run.retrieved_chunk_count} | Failed/partial: {run.failed_or_partial ? 'yes' : 'no'}</p>
+                  <p className="app-list-item__note">{run.created_at || 'Timestamp unavailable'}</p>
+                  <div className="app-actions-row">
                     <Button kind="ghost" size="sm" renderIcon={Download} onClick={async () => {
                       const content = await exportQueryRunJson(run.query_id)
                       downloadFile(`${run.query_id}.json`, content, 'application/json;charset=utf-8')
@@ -306,13 +303,13 @@ const AuditWorkbench = () => {
           ) : missingnessEvents.length === 0 ? (
             <InlineNotification lowContrast kind="info" title="No missingness events" subtitle="Persisted Absences events will appear here once created from retrieval gaps or review work." />
           ) : (
-            <div style={sectionGridStyle}>
+            <div className="app-card-grid app-card-grid--dense">
               {missingnessEvents.map((event) => (
-                <div key={event.event_id} style={itemStyle}>
-                  <strong>{event.type}</strong>
-                  <p style={{ margin: '0.35rem 0' }}>{event.query_or_entity_or_field}</p>
-                  <p style={{ margin: '0.35rem 0' }}>Status: {event.status} | Query run: {event.query_id || 'Unavailable'}</p>
-                  <p style={{ margin: 0, color: 'var(--cds-text-secondary)' }}>{event.reviewer_note || event.evidence}</p>
+                <div key={event.event_id} className="app-list-item">
+                  <strong className="app-list-item__title">{event.type}</strong>
+                  <p className="app-list-item__body">{event.query_or_entity_or_field}</p>
+                  <p className="app-list-item__meta">Status: {event.status} | Query run: {event.query_id || 'Unavailable'}</p>
+                  <p className="app-list-item__note">{event.reviewer_note || event.evidence}</p>
                 </div>
               ))}
             </div>
@@ -326,7 +323,7 @@ const AuditWorkbench = () => {
             title="Cross-readings trace"
             description="Summary list of persisted passages and testimony-record mappings."
             actions={(
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div className="app-actions-row">
                 <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportCrossReadCsv}>Export map CSV</Button>
                 <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportCrossReadMarkdown}>Export map Markdown</Button>
               </div>
@@ -337,12 +334,12 @@ const AuditWorkbench = () => {
           ) : crossReadMap.length === 0 ? (
             <InlineNotification lowContrast kind="info" title="No cross-read traces" subtitle="Persisted testimony-record mappings will appear here after Cross-readings runs." />
           ) : (
-            <div style={sectionGridStyle}>
+            <div className="app-card-grid app-card-grid--dense">
               {crossReadMap.map((passage) => (
-                <div key={passage.passage_id} style={itemStyle}>
-                  <strong>{passage.passage_label || passage.speaker_or_source || passage.passage_id}</strong>
-                  <p style={{ margin: '0.35rem 0' }}>Status: {passage.status} | Mapping count: {passage.mapping_count}</p>
-                  <p style={{ margin: 0, color: 'var(--cds-text-secondary)' }}>{relationSummary(passage)}</p>
+                <div key={passage.passage_id} className="app-list-item">
+                  <strong className="app-list-item__title">{passage.passage_label || passage.speaker_or_source || passage.passage_id}</strong>
+                  <p className="app-list-item__body">Status: {passage.status} | Mapping count: {passage.mapping_count}</p>
+                  <p className="app-list-item__note">{relationSummary(passage)}</p>
                 </div>
               ))}
             </div>
@@ -353,10 +350,10 @@ const AuditWorkbench = () => {
       <Column lg={6} md={8} sm={4}>
         <Tile>
           <PanelHeader
-            title="Claims & Evidence trace"
+            title="Claims and evidence trace"
             description="Summary list of claim-evidence outputs and export surface." 
             actions={(
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div className="app-actions-row">
                 <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportClaimsCsv}>Export claims CSV</Button>
                 <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportClaimsMarkdown}>Export claims Markdown</Button>
               </div>
@@ -366,11 +363,11 @@ const AuditWorkbench = () => {
           {loading ? (
             <InlineNotification lowContrast kind="info" title="Loading claim traces" subtitle="Fetching persisted claim-evidence outputs and export state." />
           ) : (
-            <div style={{ ...sectionGridStyle, marginTop: '1rem' }}>
+            <div className="app-card-grid app-card-grid--dense audit-workbench__claims-list">
               {claims.map((claim) => (
-                <div key={claim.claim_id} style={itemStyle}>
-                  <strong>{claim.claim_text}</strong>
-                  <p style={{ margin: '0.35rem 0' }}>Support: {claim.support_level} | Evidence count: {claim.evidence_count} | Reviewer status: {claim.reviewer_status}</p>
+                <div key={claim.claim_id} className="app-list-item">
+                  <strong className="app-list-item__title">{claim.claim_text}</strong>
+                  <p className="app-list-item__body">Support: {claim.support_level} | Evidence count: {claim.evidence_count} | Reviewer status: {claim.reviewer_status}</p>
                 </div>
               ))}
             </div>
@@ -381,14 +378,14 @@ const AuditWorkbench = () => {
       <Column lg={6} md={8} sm={4}>
         <Tile>
           <PanelHeader title="Export surface" description="Reach the existing apparatus exports from one place." />
-          <div style={sectionGridStyle}>
+          <div className="app-card-grid app-card-grid--dense">
             <Select id="selected-query-run" labelText="Selected query run" value={selectedQueryId} onChange={(event) => setSelectedQueryId(event.target.value)}>
               <SelectItem value="" text={loading ? 'Loading query runs...' : queryRuns.length ? 'Choose a query run' : 'No query runs available'} />
               {queryRuns.map((run) => (
                 <SelectItem key={run.query_id} value={run.query_id} text={`${run.query_id} · ${run.prompt}`} />
               ))}
             </Select>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div className="app-actions-row">
               <Button kind="ghost" size="sm" renderIcon={Download} disabled={!selectedQueryRunExportsEnabled} onClick={handleExportSelectedQueryRunJson}>Selected query-run JSON</Button>
               <Button kind="ghost" size="sm" renderIcon={Download} disabled={!selectedQueryRunExportsEnabled} onClick={handleExportSelectedQueryRunMarkdown}>Selected query-run Markdown</Button>
               <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportCrossReadCsv}>Testimony-record map CSV</Button>
@@ -397,7 +394,7 @@ const AuditWorkbench = () => {
               <Button kind="ghost" size="sm" renderIcon={Download} onClick={handleExportClaimsMarkdown}>Claim-evidence Markdown</Button>
             </div>
             {selectedQueryRun && (
-              <p style={{ margin: 0, color: 'var(--cds-text-secondary)' }}>
+              <p className="app-copy-reset app-text-muted">
                 Selected run: {selectedQueryRun.query_id} | Retrieved chunks: {selectedQueryRun.retrieved_chunk_count} | Failed/partial: {selectedQueryRun.failed_or_partial ? 'yes' : 'no'}
               </p>
             )}
@@ -408,11 +405,11 @@ const AuditWorkbench = () => {
       <Column lg={6} md={8} sm={4}>
         <Tile>
           <PanelHeader title="Reproducibility note" description="Static note for review context." />
-          <p style={{ margin: 0 }}>
+          <p className="app-copy-reset">
             This page consolidates provenance traces from the working apparatus. It does not create findings; it gathers logs, exports, and evidence trails for review.
           </p>
           {missingnessSummary?.retrieval_coverage?.label && (
-            <p style={{ marginTop: '1rem', color: 'var(--cds-text-secondary)' }}>
+            <p className="app-text-muted app-copy-tight">
               Retrieval coverage: {missingnessSummary.retrieval_coverage.label}
             </p>
           )}

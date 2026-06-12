@@ -261,12 +261,12 @@ const StatsCards = () => {
             <div className="stats-card__breakdown">
               <Tag type="blue" size="sm">{formatNumber(stats?.local_table_counts?.documents || 0)} docs ingested</Tag>
               {pidAuthorities.length > 0 && (
-                <div className="stats-card__recent" style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
-                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>PID authorities (provenance):</div>
+                <div className="stats-card__recent">
+                  <div className="stats-card__recent-title">PID authorities (provenance):</div>
                   {pidAuthorities.map((auth, idx) => (
-                    <div key={idx} style={{ paddingLeft: '28px', textIndent: '-16px', marginBottom: '8px', fontFamily: 'monospace' }}>
+                    <div key={idx} className="stats-card__recent-item stats-card__recent-item--mono">
                       – {auth.title} | {auth.pid}
-                      <span style={{ marginLeft: '8px', color: 'var(--cds-text-helper)', fontSize: '0.7rem' }}>
+                      <span className="stats-card__recent-meta">
                         ({auth.pdfCount || 0} PDFs, {auth.tiffCount || 0} TIFFs)
                       </span>
                     </div>
@@ -274,11 +274,11 @@ const StatsCards = () => {
                 </div>
               )}
               {recentDocs.length > 0 && pidAuthorities.length === 0 && (
-                <div className="stats-card__recent" style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
-                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>Recent items (past week):</div>
+                <div className="stats-card__recent">
+                  <div className="stats-card__recent-title">Recent items (past week):</div>
                   {recentDocs.map((doc, idx) => (
-                    <div key={idx} style={{ paddingLeft: '28px', textIndent: '-16px', marginBottom: '8px' }}>
-                      – {doc.title} <span style={{ opacity: 0.6 }}>({doc.pid})</span>
+                    <div key={idx} className="stats-card__recent-item">
+                      – {doc.title} <span className="stats-card__recent-subtle">({doc.pid})</span>
                     </div>
                   ))}
                 </div>
@@ -315,15 +315,15 @@ const StatsCards = () => {
                 {formatNumber(stats?.total_pdf_pages || 0)} pages processed
               </div>
               {ddrDocumentTitles.length > 0 && (
-                <div className="stats-card__recent" style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
-                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>DDR documents (A–Z):</div>
+                <div className="stats-card__recent">
+                  <div className="stats-card__recent-title">DDR documents (A–Z):</div>
                   {ddrDocumentTitles.slice(0, 20).map((title, idx) => (
-                    <div key={idx} style={{ paddingLeft: '20px', textIndent: '-12px', marginBottom: '6px' }}>
+                    <div key={idx} className="stats-card__recent-item">
                       • {title}
                     </div>
                   ))}
                   {ddrDocumentTitles.length > 20 && (
-                    <div style={{ paddingLeft: '20px', fontStyle: 'italic' }}>… and {ddrDocumentTitles.length - 20} more</div>
+                    <div className="stats-card__recent-overflow">… and {ddrDocumentTitles.length - 20} more</div>
                   )}
                 </div>
               )}
@@ -344,7 +344,7 @@ const StatsCards = () => {
             <div className="stats-card__label">Core authorities</div>
             <div className="stats-card__breakdown">
               <Tag type="purple" size="sm">Provenance</Tag>
-              <div className="stats-card__meta" style={{ marginTop: '4px', fontSize: '0.7rem', lineHeight: '1.3' }}>
+              <div className="stats-card__meta">
                 Staff · Projects · Students · Fonds · Publications
               </div>
             </div>
@@ -364,7 +364,7 @@ const StatsCards = () => {
             <div className="stats-card__label">Critical authorities</div>
             <div className="stats-card__breakdown">
               <Tag type="teal" size="sm">ML Labels</Tag>
-              <div className="stats-card__meta" style={{ marginTop: '4px', fontSize: '0.7rem', lineHeight: '1.3' }}>
+              <div className="stats-card__meta">
                 Stance · Method · Theme · Period · Audience · Outcome
               </div>
             </div>

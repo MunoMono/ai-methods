@@ -2,6 +2,7 @@
 @use '@carbon/react/scss/theme' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/colors' as *;
 
 .dashboard {
   &__hero {
@@ -9,7 +10,9 @@
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     margin-bottom: $spacing-09;
-    background: linear-gradient(135deg, #0f62fe 0%, #001d6c 100%);
+    background:
+      linear-gradient(135deg, rgba($cyan-40, 0.18) 0%, transparent 38%),
+      linear-gradient(145deg, $blue-60 0%, $blue-80 62%, $cool-gray-100 100%);
     position: relative;
     overflow: hidden;
 
@@ -36,7 +39,7 @@
       right: 0;
       width: 50%;
       height: 100%;
-      background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.05) 100%);
+      background: linear-gradient(135deg, transparent 0%, rgba($white-0, 0.06) 100%);
       pointer-events: none;
     }
 
@@ -47,7 +50,7 @@
       left: -10%;
       width: 120%;
       height: 100%;
-      background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+      background: radial-gradient(ellipse at center, rgba($white-0, 0.1) 0%, transparent 70%);
       pointer-events: none;
       animation: pulse 8s ease-in-out infinite;
     }
@@ -61,7 +64,7 @@
     }
 
     .page-header__eyebrow {
-      color: rgba(255, 255, 255, 0.72);
+      color: rgba($white-0, 0.74);
     }
 
     .page-header__title {
@@ -69,7 +72,7 @@
     }
 
     .page-header__description {
-      color: rgba(255, 255, 255, 0.88);
+      color: rgba($white-0, 0.88);
       max-width: 40rem;
     }
 
@@ -444,5 +447,15 @@
       line-height: 1.5;
       margin: 0;
     }
+  }
+
+  &__metric-value {
+    @include type-style('heading-04');
+    margin: $spacing-02 0 0;
+    color: $text-primary;
+  }
+
+  &__priority-copy {
+    color: $text-secondary;
   }
 }

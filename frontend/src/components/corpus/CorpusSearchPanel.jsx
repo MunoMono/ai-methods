@@ -1,4 +1,5 @@
 import { Button, Select, SelectItem, Tag, TextInput, Tile } from '@carbon/react'
+import './CorpusPanels.scss'
 
 const CorpusSearchPanel = ({ filters, suggestions, onChange, onReset }) => {
   const updateField = (field, value) => {
@@ -17,11 +18,11 @@ const CorpusSearchPanel = ({ filters, suggestions, onChange, onReset }) => {
   return (
     <Tile>
       <h3>Search and filter</h3>
-      <p style={{ marginBottom: '1rem' }}>
+      <p className="corpus-panel__intro">
         Use the current document index to narrow the DDR corpus by title text, publication year, and processing state.
       </p>
 
-      <div style={{ display: 'grid', gap: '1rem' }}>
+      <div className="corpus-panel__stack">
         <TextInput
           id="corpus-keyword"
           labelText="Keyword or document ID"
@@ -50,20 +51,20 @@ const CorpusSearchPanel = ({ filters, suggestions, onChange, onReset }) => {
           <SelectItem text="Failed" value="failed" />
         </Select>
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div className="app-actions-row app-actions-row--comfortable">
           <Button kind="secondary" onClick={onReset}>Reset filters</Button>
         </div>
 
         <div>
-          <h4 style={{ marginBottom: '0.5rem' }}>Autocomplete cues</h4>
+          <h4 className="corpus-panel__section-title">Autocomplete cues</h4>
           {suggestionGroups.length === 0 ? (
-            <p style={{ margin: 0 }}>Start typing two or more characters to see document, theme, and entity suggestions.</p>
+            <p className="corpus-panel__empty">Start typing two or more characters to see document, theme, and entity suggestions.</p>
           ) : (
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
+            <div className="app-card-grid app-card-grid--dense">
               {suggestionGroups.map((group) => (
                 <div key={group.label}>
-                  <div style={{ marginBottom: '0.375rem', fontWeight: 600 }}>{group.label}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div className="corpus-panel__suggestion-label">{group.label}</div>
+                  <div className="app-tag-row">
                     {group.items.map((item, index) => (
                       <Tag
                         key={`${group.label}-${item.text}-${index}`}
@@ -82,8 +83,8 @@ const CorpusSearchPanel = ({ filters, suggestions, onChange, onReset }) => {
         </div>
 
         <div>
-          <h4 style={{ marginBottom: '0.5rem' }}>Next metadata step</h4>
-          <p style={{ margin: 0 }}>
+          <h4 className="corpus-panel__section-title">Next metadata step</h4>
+          <p className="corpus-panel__empty">
             PID, authority, media, embeddings, and ML coverage filters will become first-class once the list endpoint exposes those fields directly.
           </p>
         </div>

@@ -36,7 +36,7 @@ const readinessDefinitions = [
   },
   {
     key: 'claims-evidence',
-    title: 'Claims & evidence',
+    title: 'Claims and evidence',
     description: 'Analytical output: claim-evidence matrix.',
     priority: 'Back claims with persisted evidence attachments before automation.'
   }
@@ -118,7 +118,7 @@ const Dashboard = () => {
         <div className="dashboard__hero-inner">
           <PageHeader
             eyebrow="90-day statement of work"
-            title="Archival Activation Workbench"
+            title="Archival activation workbench"
             description="A provenance-aware research apparatus for source interrogation, absences, cross-readings, semantic patterning, and claim-evidence control."
           />
         </div>
@@ -140,7 +140,7 @@ const Dashboard = () => {
             </div>
             <h2 className="dashboard__granite-hero-title">Research apparatus status</h2>
             <p className="dashboard__granite-hero-description">
-              The current workbench is organized around five analytical outputs: source interrogation, absences, cross-readings, semantic patterning, and claims & evidence. Each view exists to produce a thesis artefact, provenance trail, or research decision surface.
+              The current workbench is organized around five analytical outputs: source interrogation, absences, cross-readings, semantic patterning, and claims and evidence. Each view exists to produce a thesis artefact, provenance trail, or research decision surface.
             </p>
             {graniteInfo && (
               <div className="dashboard__granite-hero-specs">
@@ -179,7 +179,7 @@ const Dashboard = () => {
           <Column key={item.label} lg={4} md={4} sm={4}>
             <Tile className="dashboard__info-tile">
               <h4>{item.label}</h4>
-              <p style={{ fontSize: '2rem', margin: '0.25rem 0 0' }}>{item.value}</p>
+              <p className="dashboard__metric-value">{item.value}</p>
             </Tile>
           </Column>
         ))}
@@ -196,7 +196,7 @@ const Dashboard = () => {
               </div>
               <h3>{item.title}</h3>
               <p>{item.description}</p>
-              <p style={{ color: 'var(--cds-text-secondary)' }}>{item.priority}</p>
+              <p className="dashboard__priority-copy">{item.priority}</p>
             </ClickableTile>
           </Column>
         ))}
@@ -228,11 +228,11 @@ const Dashboard = () => {
         <Column lg={5} md={8} sm={4}>
           <Tile className="dashboard__info-tile">
             <SectionHeading title="Recent research activity" />
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
+            <div className="app-card-grid app-card-grid--dense">
               {recentActivity.map((item) => (
                 <div key={item.label}>
                   <strong>{item.label}</strong>
-                  <p style={{ margin: '0.25rem 0 0' }}>{item.detail}</p>
+                  <p className="app-copy-tight">{item.detail}</p>
                 </div>
               ))}
             </div>
@@ -242,9 +242,9 @@ const Dashboard = () => {
         <Column lg={5} md={8} sm={4}>
           <Tile className="dashboard__info-tile">
             <SectionHeading title="Current known limitations" />
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
+            <div className="app-card-grid app-card-grid--dense">
               {limitations.map((item) => (
-                <p key={item} style={{ margin: 0 }}>{item}</p>
+                <p key={item} className="app-copy-reset">{item}</p>
               ))}
             </div>
           </Tile>
@@ -253,9 +253,9 @@ const Dashboard = () => {
         <Column lg={6} md={8} sm={4}>
           <Tile className="dashboard__info-tile">
             <SectionHeading title="Next build priority" />
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
+            <div className="app-card-grid app-card-grid--dense">
               {priorities.map((item) => (
-                <p key={item} style={{ margin: 0 }}>{item}</p>
+                <p key={item} className="app-copy-reset">{item}</p>
               ))}
             </div>
           </Tile>

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
+import { chartColors, chartStyles } from '../../utils/carbonD3Theme'
 import '../../styles/components/TemporalDriftChart.scss'
 
 const TemporalDriftChart = () => {
@@ -48,23 +49,23 @@ const TemporalDriftChart = () => {
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(x).tickFormat(d3.format('d')))
-      .attr('color', '#f4f4f4')
+      .attr('color', chartStyles.timeline.text.fill)
 
     svg.append('g')
       .call(d3.axisLeft(y))
-      .attr('color', '#f4f4f4')
+      .attr('color', chartStyles.timeline.text.fill)
 
     svg.append('path')
       .datum(data)
       .attr('fill', 'none')
-      .attr('stroke', '#0f62fe')
+      .attr('stroke', chartColors.dialectical)
       .attr('stroke-width', 2)
       .attr('d', lineDialectical)
 
     svg.append('path')
       .datum(data)
       .attr('fill', 'none')
-      .attr('stroke', '#24a148')
+      .attr('stroke', chartColors.emergent)
       .attr('stroke-width', 2)
       .attr('d', lineEmergent)
 
@@ -77,14 +78,14 @@ const TemporalDriftChart = () => {
       .attr('x2', 30)
       .attr('y1', 0)
       .attr('y2', 0)
-      .attr('stroke', '#0f62fe')
+      .attr('stroke', chartColors.dialectical)
       .attr('stroke-width', 2)
 
     legend.append('text')
       .attr('x', 35)
       .attr('y', 5)
       .text('Dialectical')
-      .attr('fill', '#f4f4f4')
+      .attr('fill', chartStyles.timeline.text.fill)
       .style('font-size', '12px')
 
     legend.append('line')
@@ -92,14 +93,14 @@ const TemporalDriftChart = () => {
       .attr('x2', 30)
       .attr('y1', 20)
       .attr('y2', 20)
-      .attr('stroke', '#24a148')
+      .attr('stroke', chartColors.emergent)
       .attr('stroke-width', 2)
 
     legend.append('text')
       .attr('x', 35)
       .attr('y', 25)
       .text('Emergent')
-      .attr('fill', '#f4f4f4')
+      .attr('fill', chartStyles.timeline.text.fill)
       .style('font-size', '12px')
 
   }, [])

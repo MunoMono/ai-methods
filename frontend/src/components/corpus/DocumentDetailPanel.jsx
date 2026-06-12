@@ -1,4 +1,5 @@
 import { Button, SkeletonText, Tag, Tile } from '@carbon/react'
+import './CorpusPanels.scss'
 
 const copyCitation = async (detail) => {
   const document = detail?.document || {}
@@ -37,8 +38,8 @@ const DocumentDetailPanel = ({ detail, loading, onTraceEvidence, onViewAnalytics
 
   return (
     <Tile>
-      <h3 style={{ marginTop: 0 }}>{document.title}</h3>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+      <h3 className="corpus-panel__section-title">{document.title}</h3>
+      <div className="app-tag-row corpus-panel__tag-row">
         <Tag type="blue">{annotations?.pid || 'PID not yet exposed by endpoint'}</Tag>
         <Tag type="gray">{document.publication_year || 'Year not yet exposed by endpoint'}</Tag>
         <Tag type={document.processing_status === 'completed' ? 'green' : 'blue'}>{document.processing_status || 'unknown'}</Tag>
@@ -46,45 +47,45 @@ const DocumentDetailPanel = ({ detail, loading, onTraceEvidence, onViewAnalytics
 
       {error && <p>{error}</p>}
 
-      <div style={{ display: 'grid', gap: '1rem' }}>
+      <div className="corpus-panel__stack">
         <div>
-          <h4>Metadata</h4>
-          <p style={{ margin: 0 }}>Document ID: {document.id || 'Not yet exposed by endpoint'}</p>
-          <p style={{ margin: 0 }}>Filename: {document.filename || 'Not yet exposed by endpoint'}</p>
-          <p style={{ margin: 0 }}>Page count: {annotations?.page_count || document.page_count || 'Not yet exposed by endpoint'}</p>
+          <h4 className="corpus-panel__section-title">Metadata</h4>
+          <p className="corpus-panel__copy">Document ID: {document.id || 'Not yet exposed by endpoint'}</p>
+          <p className="corpus-panel__copy">Filename: {document.filename || 'Not yet exposed by endpoint'}</p>
+          <p className="corpus-panel__copy">Page count: {annotations?.page_count || document.page_count || 'Not yet exposed by endpoint'}</p>
         </div>
 
         <div>
-          <h4>Handoff surface</h4>
-          <p style={{ margin: 0 }}>Processing status: {document.processing_status || 'unknown'}</p>
-          <p style={{ margin: 0 }}>PID linkage: {annotations?.pid ? 'Present' : 'Not yet exposed by endpoint'}</p>
-          <p style={{ margin: 0 }}>Analytical output: source handoff into source interrogation, absences, or the semantic atlas.</p>
+          <h4 className="corpus-panel__section-title">Handoff surface</h4>
+          <p className="corpus-panel__copy">Processing status: {document.processing_status || 'unknown'}</p>
+          <p className="corpus-panel__copy">PID linkage: {annotations?.pid ? 'Present' : 'Not yet exposed by endpoint'}</p>
+          <p className="corpus-panel__copy">Analytical output: source handoff into source interrogation, absences, or the semantic atlas.</p>
         </div>
 
         <div>
-          <h4>ML annotation</h4>
-          <p style={{ margin: 0 }}>Used for ML: {annotations?.used_for_ml ? 'Yes' : 'No / unspecified'}</p>
-          <p style={{ margin: 0 }}>ML pages: {annotations?.ml_pages || 'Not yet exposed by endpoint'}</p>
-          <p style={{ marginBottom: 0 }}>{annotations?.ml_annotation || 'No annotation text returned by the endpoint.'}</p>
+          <h4 className="corpus-panel__section-title">ML annotation</h4>
+          <p className="corpus-panel__copy">Used for ML: {annotations?.used_for_ml ? 'Yes' : 'No / unspecified'}</p>
+          <p className="corpus-panel__copy">ML pages: {annotations?.ml_pages || 'Not yet exposed by endpoint'}</p>
+          <p className="corpus-panel__copy">{annotations?.ml_annotation || 'No annotation text returned by the endpoint.'}</p>
         </div>
 
         <div>
-          <h4>Similar documents</h4>
+          <h4 className="corpus-panel__section-title">Similar documents</h4>
           {similarDocuments?.length > 0 ? (
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
+            <div className="corpus-panel__list">
               {similarDocuments.slice(0, 5).map((similar) => (
                 <div key={similar.document_id}>
                   <strong>{similar.title}</strong>
-                  <div>PID: {similar.pid || 'Not yet exposed by endpoint'} | Similarity: {(similar.similarity * 100).toFixed(1)}%</div>
+                  <div className="corpus-panel__meta">PID: {similar.pid || 'Not yet exposed by endpoint'} | Similarity: {(similar.similarity * 100).toFixed(1)}%</div>
                 </div>
               ))}
             </div>
           ) : (
-            <p style={{ margin: 0 }}>No similar documents returned for this document.</p>
+            <p className="corpus-panel__empty">No similar documents returned for this document.</p>
           )}
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div className="app-actions-row app-actions-row--comfortable">
           <Button kind="primary" onClick={onTraceEvidence}>Interrogate this source</Button>
           <Button kind="secondary" onClick={onInspectMissingness}>Inspect absences</Button>
           <Button kind="ghost" onClick={onViewAnalytics}>Locate in atlas</Button>

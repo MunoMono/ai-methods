@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Grid,
-  Column,
   Tile,
   Loading,
   ProgressBar,
@@ -31,28 +29,32 @@ import {
   Search,
   Renew,
 } from '@carbon/icons-react';
+import PanelHeader from '../../components/layout/PanelHeader';
+import PageHeader from '../../components/layout/PageHeader';
+import { PageGrid, PageColumn as Column } from '../../components/layout/PageGrid';
 import DocumentNetwork from '../../components/visualizations/DocumentNetwork';
 import ThemeDistribution from '../../components/visualizations/ThemeDistribution';
 import TemporalTrends from '../../components/visualizations/TemporalTrends';
 import EntityNetwork from '../../components/visualizations/EntityNetwork';
 import GraniteChatPanel from './GraniteChatPanel';
-import getApiBaseUrl from '../../utils/apiBaseUrl';
+import {
+  fetchDashboardStats as fetchDashboardStatsData,
+  refreshDashboardStats as refreshDashboardStatsData
+} from '../../api/viz';
 import './MLDashboard.scss';
 
 const MLDashboard = () => {
-  const apiBaseUrl = getApiBaseUrl();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchDashboardStats();
+    loadDashboardStats();
   }, []);
 
-  const fetchDashboardStats = async () => {
+  const loadDashboardStats = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/viz/dashboard-stats`);
-      const data = await response.json();
+      const data = await fetchDashboardStatsData();
       setStats(data);
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error);
@@ -64,10 +66,8 @@ const MLDashboard = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await fetch(`${apiBaseUrl}/api/viz/refresh-stats`, {
-        method: 'POST'
-      });
-      await fetchDashboardStats();
+      await refreshDashboardStatsData();
+      await loadDashboardStats();
     } catch (error) {
       console.error('Failed to refresh stats:', error);
     } finally {
@@ -87,29 +87,26 @@ const MLDashboard = () => {
 
   return (
     <div className="ml-dashboard">
-      <Grid narrow>
-        {/* Header */}
-        <Column lg={16} md={8} sm={4} className="dashboard-header">
-          <div className="header-content">
-            <div>
-              <h1>ML processing dashboard</h1>
-              <p className="header-subtitle">
-                RCA PhD Research Corpus Analysis & Visualization
-              </p>
-            </div>
-            <Button
-              kind="tertiary"
-              renderIcon={Renew}
-              onClick={handleRefresh}
-              disabled={refreshing}
-            >
-              {refreshing ? 'Refreshing...' : 'Refresh stats'}
-            </Button>
-          </div>
+      <PageGrid>
+        <Column className="dashboard-header">
+          <PageHeader
+            title="ML processing dashboard"
+            description="RCA PhD research corpus analysis and visualization."
+            actions={(
+              <Button
+                kind="tertiary"
+                renderIcon={Renew}
+                onClick={handleRefresh}
+                disabled={refreshing}
+              >
+                {refreshing ? 'Refreshing...' : 'Refresh stats'}
+              </Button>
+            )}
+          />
         </Column>
 
         {/* Stats Cards */}
-        <Column lg={4} md={4} sm={4}>
+        <Column lg={7} md={4} sm={4}>
           <Tile className="stats-tile">
             <div className="stats-icon">
               <Document size={32} />
@@ -117,12 +114,12 @@ const MLDashboard = () => {
             <div className="stats-content">
               <h3 className="stats-number">{stats?.overview?.totalDocuments || 0}</h3>
               <p className="stats-label">Total documents</p>
-              <p className="stats-meta">{stats?.overview?.totalPdfs || 0} PDFs</p>
+              <p className="stats-meta">{stats?.overview?.totalPdfs || 0} PDFs indexed</p>
             </div>
           </Tile>
         </Column>
 
-        <Column lg={4} md={4} sm={4}>
+        <Column lg={7} md={4} sm={4}>
           <Tile className="stats-tile">
             <div className="stats-icon">
               <Analytics size={32} />
@@ -139,7 +136,7 @@ const MLDashboard = () => {
           </Tile>
         </Column>
 
-        <Column lg={4} md={4} sm={4}>
+        <Column lg={7} md={4} sm={4}>
           <Tile className="stats-tile">
             <div className="stats-icon">
               <ModelAlt size={32} />
@@ -148,13 +145,13 @@ const MLDashboard = () => {
               <h3 className="stats-number">{stats?.mlProcessing?.documentsWithEntities || 0}</h3>
               <p className="stats-label">Entities extracted</p>
               <p className="stats-meta">
-                Avg Confidence: {(stats?.mlProcessing?.avgConfidence * 100 || 0).toFixed(1)}%
+                Avg Confidence: {((stats?.mlProcessing?.avgConfidence || 0) * 100).toFixed(1)}%
               </p>
             </div>
           </Tile>
         </Column>
 
-        <Column lg={4} md={4} sm={4}>
+        <Column lg={7} md={4} sm={4}>
           <Tile className="stats-tile">
             <div className="stats-icon">
               <DataVis_1 size={32} />
@@ -170,7 +167,7 @@ const MLDashboard = () => {
         </Column>
 
         {/* Visualizations Tabs */}
-        <Column lg={16} className="visualization-section">
+        <Column className="visualization-section">
           <Tabs>
             <TabList aria-label="Visualization tabs" contained>
               <Tab renderIcon={Network_3}>Document network</Tab>
@@ -181,41 +178,44 @@ const MLDashboard = () => {
             <TabPanels>
               <TabPanel>
                 <Tile className="visualization-tile">
-                  <h4>Document similarity network</h4>
-                  <p className="tile-description">
-                    Interactive network showing relationships between documents based on semantic similarity,
-                    shared themes, and entity overlap. Node size represents PDF count.
-                  </p>
+                  <PanelHeader
+                    title="Document similarity network"
+                    description="Interactive network showing relationships between documents based on semantic similarity, shared themes, and entity overlap. Node size represents PDF count."
+                    className="visualization-tile__header"
+                  />
                   <DocumentNetwork />
                 </Tile>
               </TabPanel>
               
               <TabPanel>
                 <Tile className="visualization-tile">
-                  <h4>Theme distribution analysis</h4>
-                  <p className="tile-description">
-                    Distribution of themes across the research corpus. Colors from Carbon Design palette.
-                  </p>
+                  <PanelHeader
+                    title="Theme distribution analysis"
+                    description="Distribution of themes across the research corpus. Colors from Carbon Design palette."
+                    className="visualization-tile__header"
+                  />
                   <ThemeDistribution />
                 </Tile>
               </TabPanel>
               
               <TabPanel>
                 <Tile className="visualization-tile">
-                  <h4>Publication timeline</h4>
-                  <p className="tile-description">
-                    Document publication trends over time with theme evolution.
-                  </p>
+                  <PanelHeader
+                    title="Publication timeline"
+                    description="Document publication trends over time with theme evolution."
+                    className="visualization-tile__header"
+                  />
                   <TemporalTrends />
                 </Tile>
               </TabPanel>
               
               <TabPanel>
                 <Tile className="visualization-tile">
-                  <h4>Entity co-occurrence network</h4>
-                  <p className="tile-description">
-                    Network of people, organizations, and concepts mentioned across documents.
-                  </p>
+                  <PanelHeader
+                    title="Entity co-occurrence network"
+                    description="Network of people, organizations, and concepts mentioned across documents."
+                    className="visualization-tile__header"
+                  />
                   <EntityNetwork />
                 </Tile>
               </TabPanel>
@@ -223,14 +223,14 @@ const MLDashboard = () => {
           </Tabs>
         </Column>
 
-        <Column lg={16}>
+        <Column>
           <GraniteChatPanel />
         </Column>
 
         {/* Recent Activity */}
-        <Column lg={16}>
+        <Column>
           <Tile className="activity-tile">
-            <h4>Recent ML processing activity</h4>
+            <PanelHeader title="Recent ML processing activity" className="activity-tile__header" />
             <div className="activity-table">
               {stats?.recentActivity && stats.recentActivity.length > 0 ? (
                 <DataTable
@@ -295,7 +295,7 @@ const MLDashboard = () => {
             </p>
           </Tile>
         </Column>
-      </Grid>
+      </PageGrid>
     </div>
   );
 };

@@ -72,10 +72,7 @@ const DocumentTable = ({ documents, loading, selectedDocumentId, onSelect }) => 
                     key={row.id}
                     {...getRowProps({ row })}
                     onClick={() => onSelect(documents.find((document) => document.id === row.id))}
-                    style={{
-                      cursor: 'pointer',
-                      backgroundColor: row.id === selectedDocumentId ? 'rgba(15, 98, 254, 0.08)' : undefined
-                    }}
+                    className={row.id === selectedDocumentId ? 'app-table-row--interactive app-table-row--selected' : 'app-table-row--interactive'}
                   >
                     {row.cells.map((cell) => (
                       <TableCell key={cell.id}>

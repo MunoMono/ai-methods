@@ -137,3 +137,140 @@
     color: var(--cds-text-secondary);
   }
 }
+
+.app-loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.app-card-grid {
+  display: grid;
+  gap: $spacing-05;
+
+  &--dense {
+    gap: $spacing-04;
+  }
+
+  &--compact {
+    gap: $spacing-03;
+  }
+
+  &--responsive {
+    grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+  }
+}
+
+.app-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-03;
+
+  &--comfortable {
+    gap: $spacing-04;
+    margin-top: $spacing-05;
+    align-items: center;
+  }
+
+  &--inline {
+    align-items: center;
+  }
+}
+
+.app-stat-card {
+  padding: $spacing-05;
+  border: 1px solid $border-subtle-01;
+  background-color: $layer-01;
+}
+
+.app-stat-card__title {
+  @include type-style('heading-01');
+  margin: 0;
+  color: var(--cds-text-primary);
+}
+
+.app-stat-card__value {
+  @include type-style('heading-04');
+  margin: $spacing-02 0;
+  color: var(--cds-text-primary);
+}
+
+.app-stat-card__note {
+  @include type-style('body-01');
+  margin: 0;
+  color: var(--cds-text-secondary);
+}
+
+.app-list-item {
+  padding-bottom: $spacing-04;
+  border-bottom: 1px solid $border-subtle-01;
+}
+
+.app-list-item__title {
+  margin: 0;
+  color: var(--cds-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.app-list-item__body,
+.app-list-item__meta,
+.app-list-item__note {
+  @include type-style('body-01');
+  overflow-wrap: anywhere;
+}
+
+.app-list-item__body,
+.app-list-item__meta {
+  margin: $spacing-02 0 0;
+}
+
+.app-list-item__note {
+  margin: $spacing-02 0 0;
+  color: var(--cds-text-secondary);
+}
+
+.app-list-item--interactive {
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.app-list-item--selected {
+  background-color: var(--cds-layer-selected);
+}
+
+.app-table-row--interactive {
+  cursor: pointer;
+}
+
+.app-table-row--selected {
+  background-color: var(--cds-layer-selected);
+}
+
+.app-text-muted {
+  @include type-style('body-01');
+  color: var(--cds-text-secondary);
+}
+
+.app-text-helper {
+  @include type-style('helper-text-01');
+  color: var(--cds-text-secondary);
+}
+
+.app-copy-tight {
+  margin: $spacing-02 0 0;
+}
+
+.app-copy-reset {
+  margin: 0;
+}
+
+.app-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-03;
+}
+
+.app-table-wrap {
+  overflow-x: auto;
+}
