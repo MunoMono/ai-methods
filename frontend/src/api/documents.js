@@ -10,6 +10,19 @@ export const listDocuments = async (params = {}) => {
   }
 }
 
+export const getDocumentInventorySummary = async () => {
+  const payload = await apiRequest('/api/documents')
+  const documents = payload?.documents || []
+
+  return {
+    count: payload?.count || documents.length,
+    eligibleUnrestricted: documents.filter((document) => document.ml_policy_status === 'eligible_unrestricted').length,
+    eligibleRestricted: documents.filter((document) => document.ml_policy_status === 'eligible_page_restricted').length,
+    excluded: documents.filter((document) => document.ml_policy_status === 'excluded_use_for_ml_false').length,
+    nullPolicyRows: documents.filter((document) => document.ml_policy_status === null || document.ml_policy_status === undefined).length,
+  }
+}
+
 export const getDocument = async (documentId) => {
   const payload = await apiRequest(`/api/documents/${documentId}`)
   return normalizeDocument(payload)
@@ -21,8 +34,9 @@ export const getDocumentAnnotations = async (documentId) => {
   return {
     document_id: payload.document_id,
     pid: payload.pid || null,
+    attached_media_pid: payload.attached_media_pid || payload.pid || null,
     title: payload.title || 'Untitled document',
-    used_for_ml: Boolean(payload.used_for_ml),
+    used_for_ml: payload.used_for_ml === null || payload.used_for_ml === undefined ? null : Boolean(payload.used_for_ml),
     ml_pages: payload.ml_pages || '',
     ml_page_scope: payload.ml_page_scope || '',
     ml_annotation: payload.ml_annotation || '',
@@ -40,10 +54,11 @@ export const getDocumentAnnotations = async (documentId) => {
     corpus_version: payload.corpus_version || null,
     metadata_roles_version: payload.metadata_roles_version || null,
     record_public_uri: payload.record_public_uri || null,
+    persistence: payload.persistence || {},
     corpus_control: payload.corpus_control || {},
     retrieval_provenance: payload.retrieval_provenance || {},
     catalogue_metadata: payload.catalogue_metadata || {},
-    page_count: payload.page_count || 0,
+    page_count: payload.page_count ?? null,
     ml_processed_at: payload.ml_processed_at || null
   }
 }

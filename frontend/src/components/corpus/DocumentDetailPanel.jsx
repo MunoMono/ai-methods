@@ -1,8 +1,24 @@
 import { Button, SkeletonText, Tag, Tile } from '@carbon/react'
 import './CorpusPanels.scss'
 
-const renderValue = (value, fallback = 'Not available from the current endpoint.') => {
+const hasValue = (value) => {
   if (value === null || value === undefined) {
+    return false
+  }
+
+  if (Array.isArray(value)) {
+    return value.some((item) => hasValue(item))
+  }
+
+  if (typeof value === 'string') {
+    return value.trim().length > 0
+  }
+
+  return true
+}
+
+const renderValue = (value, fallback = 'Not available from the current endpoint.') => {
+  if (!hasValue(value)) {
     return fallback
   }
 
@@ -27,7 +43,7 @@ const formatMlEligibility = (annotations) => {
     return 'Excluded'
   }
 
-  if (annotations.used_for_ml) {
+  if (annotations.used_for_ml === true || annotations.ml_policy_status?.startsWith('eligible')) {
     return 'Included'
   }
 
@@ -36,15 +52,27 @@ const formatMlEligibility = (annotations) => {
 
 const formatMlPageScope = (annotations) => {
   const scope = annotations?.ml_page_scope || annotations?.ml_pages || ''
-  if (!scope) {
-    return annotations?.used_for_ml ? 'All pages' : 'Not applicable'
-  }
-
   if (scope === 'all_pages') {
     return 'All pages'
   }
 
-  return `pp. ${scope.replace(/-/g, '–')}`
+  if (scope) {
+    return `pp. ${scope.replace(/-/g, '–')}`
+  }
+
+  if (annotations?.ml_policy_status === 'excluded_use_for_ml_false' || annotations?.used_for_ml === false) {
+    return 'Not applicable'
+  }
+
+  if (annotations?.ml_policy_status === 'policy_unresolved' || annotations?.used_for_ml === null || annotations?.used_for_ml === undefined) {
+    return 'Unresolved'
+  }
+
+  if (annotations?.used_for_ml === true) {
+    return 'All pages'
+  }
+
+  return 'Not yet recorded'
 }
 
 const formatPolicyReason = (annotations) => {
@@ -79,6 +107,12 @@ const formatMetadataList = (metadata) => Object.entries(metadata || {}).filter((
   return value !== null && value !== undefined && `${value}`.trim() !== ''
 })
 
+const buildFieldRows = (rows) => rows.filter((row) => hasValue(row.value))
+
+const formatFieldLabel = (value) => value.replaceAll('_', ' ')
+
+const formatAuthorityRole = (value) => value.replaceAll('_', ' ')
+
 const copyCitation = async (detail) => {
   const document = detail?.document || {}
   const annotations = detail?.annotations || {}
@@ -95,7 +129,7 @@ const copyCitation = async (detail) => {
   }
 }
 
-const DocumentDetailPanel = ({ detail, loading, onTraceEvidence, onViewAnalytics, onInspectMissingness }) => {
+const DocumentDetailPanel = ({ detail, loading, onTraceEvidence, onViewAnalytics, onInspectMissingness, authoritySummary = null }) => {
   if (loading) {
     return (
       <Tile>
@@ -118,6 +152,30 @@ const DocumentDetailPanel = ({ detail, loading, onTraceEvidence, onViewAnalytics
   const provenanceMetadata = annotations?.retrieval_provenance || {}
   const policyReason = formatPolicyReason(annotations)
   const recordPublicUrl = annotations?.record_public_uri || provenanceMetadata.record_public_uri || null
+  const policyStatusLabel = formatStatusLabel(annotations?.ml_policy_status)
+  const policyExplanation = annotations?.ml_policy_status === 'policy_unresolved' || annotations?.used_for_ml === null || annotations?.used_for_ml === undefined
+    ? policyReason || 'The current local record does not yet contain enough asset-level policy data to determine ML eligibility or page scope.'
+    : null
+  const retrievalRows = buildFieldRows([
+    { label: 'Document ID', value: document.id, fallback: 'Not yet exposed by endpoint' },
+    { label: 'Archive record PID', value: annotations?.archive_record_pid },
+    { label: 'Attached-media PID', value: annotations?.attached_media_pid || document.attached_media_pid || document.pid },
+    { label: 'Asset PID', value: annotations?.asset_pid },
+    { label: 'Asset ID', value: annotations?.asset_id },
+    { label: 'Source filename', value: annotations?.source_filename || document.filename },
+    { label: 'Source URI', value: annotations?.source_uri || document.source_uri },
+    { label: 'Archive reference', value: provenanceMetadata.archive_reference },
+    { label: 'Creator', value: provenanceMetadata.creator },
+    { label: 'Date', value: provenanceMetadata.document_date },
+    { label: 'Page count', value: annotations?.page_count ?? document.page_count ?? null }
+  ])
+  const persistence = annotations?.persistence || {}
+  const persistenceRows = [
+    { label: 'Local persistence status', value: document.processing_status || annotations?.processing_status, fallback: 'Unknown' },
+    { label: 'Metadata roles version', value: persistence.metadata_roles_version || annotations?.metadata_roles_version, fallback: 'Not yet recorded' },
+    { label: 'Ingestion version', value: persistence.ingestion_version || annotations?.ingestion_version, fallback: 'Not yet recorded' },
+    { label: 'Corpus version', value: persistence.corpus_version || annotations?.corpus_version, fallback: 'Not yet recorded' }
+  ]
 
   return (
     <Tile>
@@ -135,21 +193,23 @@ const DocumentDetailPanel = ({ detail, loading, onTraceEvidence, onViewAnalytics
           <h4 className="corpus-panel__section-title">Corpus control</h4>
           <p className="corpus-panel__copy">ML eligibility: {formatMlEligibility(annotations)}</p>
           <p className="corpus-panel__copy">ML page scope: {formatMlPageScope(annotations)}</p>
-          <p className="corpus-panel__copy">Policy status: {renderValue(formatStatusLabel(annotations?.ml_policy_status), 'Not available from the current endpoint.')}</p>
+          <p className="corpus-panel__copy">Policy status: {renderValue(policyStatusLabel, 'Policy unresolved')}</p>
           {policyReason ? <p className="corpus-panel__copy">Reason: {policyReason}</p> : null}
-          <p className="corpus-panel__copy">Access and rights control: {renderValue(annotations?.corpus_control?.access_level || annotations?.corpus_control?.rights_note)}</p>
+          {policyExplanation ? <p className="corpus-panel__meta">{policyExplanation}</p> : null}
+          <p className="corpus-panel__copy">Access and rights control: {renderValue(annotations?.corpus_control?.access_level || annotations?.corpus_control?.rights_note, 'Not recorded on this local record.')}</p>
         </div>
 
         <div>
           <h4 className="corpus-panel__section-title">Retrieval and provenance</h4>
-          <p className="corpus-panel__copy">Document ID: {document.id || 'Not yet exposed by endpoint'}</p>
-          <p className="corpus-panel__copy">Archive record PID: {renderValue(annotations?.archive_record_pid)}</p>
-          <p className="corpus-panel__copy">Asset identifier: {renderValue(annotations?.asset_pid || annotations?.asset_id || annotations?.asset_id_or_asset_pid)}</p>
-          <p className="corpus-panel__copy">Source filename: {renderValue(annotations?.source_filename || document.filename)}</p>
-          <p className="corpus-panel__copy">Archive reference: {renderValue(provenanceMetadata.archive_reference)}</p>
-          <p className="corpus-panel__copy">Creator: {renderValue(provenanceMetadata.creator)}</p>
-          <p className="corpus-panel__copy">Date: {renderValue(provenanceMetadata.document_date)}</p>
-          <p className="corpus-panel__copy">Page count: {annotations?.page_count || document.page_count || 'Not available from the current endpoint.'}</p>
+          <div className="corpus-panel__list">
+            {retrievalRows.map((row) => (
+              <div key={row.label} className="corpus-panel__field-row">
+                <p className="corpus-panel__field-label">{row.label}</p>
+                <p className="corpus-panel__field-value">{renderValue(row.value, row.fallback || 'Not yet recorded')}</p>
+              </div>
+            ))}
+          </div>
+          <p className="corpus-panel__meta">Additional archive provenance is not yet exposed through this local record.</p>
         </div>
 
         <div>
@@ -157,23 +217,51 @@ const DocumentDetailPanel = ({ detail, loading, onTraceEvidence, onViewAnalytics
           {catalogueMetadata.length > 0 ? (
             <div className="corpus-panel__list">
               {catalogueMetadata.map(([key, value]) => (
-                <p key={key} className="corpus-panel__copy"><strong>{key.replaceAll('_', ' ')}:</strong> {renderValue(value)}</p>
+                <div key={key} className="corpus-panel__field-row">
+                  <p className="corpus-panel__field-label">{formatFieldLabel(key)}</p>
+                  <p className="corpus-panel__field-value">{renderValue(value)}</p>
+                </div>
               ))}
             </div>
           ) : (
-            <p className="corpus-panel__empty">No descriptive archive metadata returned for this source.</p>
+            <p className="corpus-panel__empty">No archive/catalogue metadata is currently attached to this local corpus record.</p>
           )}
           <p className="corpus-panel__meta">Catalogue metadata is descriptive context about the archived object, not a transcription of the PDF source text.</p>
         </div>
 
         <div>
           <h4 className="corpus-panel__section-title">Persistence and handoff</h4>
-          <p className="corpus-panel__copy">Local corpus status: {renderValue(document.processing_status || annotations?.processing_status, 'unknown')}</p>
-          <p className="corpus-panel__copy">Metadata role version: {renderValue(annotations?.metadata_roles_version, 'Not present on this record.')}</p>
-          <p className="corpus-panel__copy">Ingestion version: {renderValue(annotations?.ingestion_version, 'Not recorded on this record.')}</p>
-          <p className="corpus-panel__copy">Corpus version: {renderValue(annotations?.corpus_version, 'Not recorded on this record.')}</p>
+          <div className="corpus-panel__list">
+            {persistenceRows.map((row) => (
+              <div key={row.label} className="corpus-panel__field-row">
+                <p className="corpus-panel__field-label">{row.label}</p>
+                <p className="corpus-panel__field-value">{renderValue(row.value, row.fallback)}</p>
+              </div>
+            ))}
+          </div>
           <p className="corpus-panel__copy">Analytical handoff: source interrogation, absences, or semantic atlas, without collapsing policy metadata into source evidence.</p>
         </div>
+
+        {authoritySummary ? (
+          <div>
+            <h4 className="corpus-panel__section-title">Archive authorities</h4>
+            <div className="app-tag-row corpus-panel__tag-row">
+              <Tag type="teal">{authoritySummary.totalRecords} authority records</Tag>
+              <Tag type="blue">{authoritySummary.count} authority types</Tag>
+              <Tag type="gray">{authoritySummary.coreRecords} core</Tag>
+              <Tag type="purple">{authoritySummary.criticalRecords} critical</Tag>
+            </div>
+            <p className="corpus-panel__meta">Authorities support future entity resolution, filtering and controlled query expansion. They are not source-document evidence.</p>
+            <div className="corpus-panel__list corpus-panel__list--compact">
+              {authoritySummary.authorityTypes.slice(0, 4).map((item) => (
+                <div key={item.authority_type} className="corpus-panel__field-row">
+                  <p className="corpus-panel__field-label">{formatFieldLabel(item.authority_type)}</p>
+                  <p className="corpus-panel__field-value">{item.count} records · {item.allowed_roles.map(formatAuthorityRole).join(', ')}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div>
           <h4 className="corpus-panel__section-title">Similar documents</h4>

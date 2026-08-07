@@ -125,6 +125,14 @@ class CorpusInventoryService:
         ingestion_version: str = DEFAULT_INGESTION_VERSION,
     ) -> List[Dict[str, Any]]:
         records = self.authority_service.fetch_published_records(status=status)
+        return self.flatten_records_pdf_sources(records, include_non_ml=include_non_ml, ingestion_version=ingestion_version)
+
+    def flatten_records_pdf_sources(
+        self,
+        records: Iterable[Dict[str, Any]],
+        include_non_ml: bool = False,
+        ingestion_version: str = DEFAULT_INGESTION_VERSION,
+    ) -> List[Dict[str, Any]]:
         rows: List[Dict[str, Any]] = []
 
         for record in records:
@@ -187,6 +195,7 @@ class CorpusInventoryService:
                         'asset_pid': asset.get('pid') if asset else None,
                         'asset_id_or_asset_pid': asset_identifier,
                         'metadata_source': 'archive_graphql.records_v1',
+                        'attached_media_pid': pid,
                         'access_level': media_item.get('access_level'),
                         'rights_note': self._first_non_empty(media_item.get('rights_holders'), media_item.get('copyright_holder')),
                         'rights_statement_uri': media_item.get('rights_statement_uri'),
@@ -348,6 +357,7 @@ class CorpusInventoryService:
                     'ml_policy_status': row.get('ml_policy_status'),
                     'ml_exclusion_reason': row.get('ml_exclusion_reason'),
                     'authority_data': attach_metadata_roles({
+                        'pid': row.get('pid'),
                         'media_id': row.get('authority_id'),
                         'authority_id': row.get('authority_id'),
                         'record_id': row.get('archive_record_id'),
@@ -355,6 +365,9 @@ class CorpusInventoryService:
                         'asset_id': row.get('asset_id'),
                         'asset_pid': row.get('asset_pid'),
                         'asset_id_or_asset_pid': row.get('asset_id_or_asset_pid'),
+                        'title': row.get('title'),
+                        'source_filename': row.get('source_filename'),
+                        'source_uri': row.get('source_uri'),
                         'record_title': row.get('record_title'),
                         'record_public_uri': row.get('record_public_uri'),
                         'creator': row.get('creator'),

@@ -9,6 +9,7 @@ from datetime import datetime
 
 from app.services.s3_sync import S3SyncService
 from app.services.graphql_sync import GraphQLSyncService
+from app.services.database_authorities_sync import sync_all_authorities_with_report
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -64,14 +65,11 @@ async def scheduled_authority_sync(
     logger.info("Starting scheduled authority sync...")
     
     try:
-        result = await graphql_sync_service.sync_all_authorities(
-            incremental=True,
-            triggered_by='cron'
-        )
+        result = sync_all_authorities_with_report()
         
         return {
             'status': 'success',
-            'message': f"Synced {result.get('new_authorities', 0)} new authorities",
+            'message': f"Synced {result.get('total_synced', 0)} authority records",
             'details': result
         }
         
@@ -94,14 +92,11 @@ async def manual_authority_sync(
     logger.info(f"Starting manual authority sync (incremental={incremental})...")
     
     try:
-        result = await graphql_sync_service.sync_all_authorities(
-            incremental=incremental,
-            triggered_by='manual'
-        )
+        result = sync_all_authorities_with_report()
         
         return {
             'status': 'success',
-            'message': f"Synced {result.get('new_authorities', 0)} authorities",
+            'message': f"Synced {result.get('total_synced', 0)} authority records",
             'details': result
         }
         

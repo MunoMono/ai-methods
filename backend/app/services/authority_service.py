@@ -84,6 +84,69 @@ class AuthorityService:
     }
     """
 
+    RECORD_BY_PID_QUERY = """
+    query GetRecordByPid($pid: ID!) {
+        record_v1(id: $pid) {
+            id
+            pid
+            title
+            public_uri
+            attached_media {
+                id
+                pid
+                title
+                public_uri
+                creator_agent_label
+                creators
+                level
+                fonds_code
+                language_codes
+                date_begin
+                date_end
+                series_id
+                ddr_period
+                artefact_date_from
+                artefact_date_to
+                category
+                reference_code
+                scope_and_content
+                methodology
+                project_theme
+                project_title
+                location_repository
+                current_consent_status
+                takedown_contact
+                access_level
+                copyright_holder
+                rights_holders
+                rights_statement_uri
+                abstract
+                caption
+                subjects
+                parent_collection
+                used_for_ml
+                ml_annotation
+                pdf_files {
+                    filename
+                    role
+                    url
+                    label
+                }
+                digital_assets {
+                    role
+                    filename
+                    assetId
+                    pid
+                    use_for_ml
+                    ml_pages
+                    ml_annotation
+                    mime
+                }
+            }
+        }
+    }
+    """
+
     SEARCH_MEDIA_ITEMS_QUERY = """
     query SearchMediaItems($query: String, $excludeAttached: Boolean!, $limit: Int!) {
         search_media_items(query: $query, exclude_attached: $excludeAttached, limit: $limit) {
@@ -214,6 +277,16 @@ class AuthorityService:
         records = data.get('records_v1') or []
         logger.info("Fetched %s published archive records from GraphQL", len(records))
         return records
+
+    def fetch_record_by_pid(self, pid: str) -> Optional[Dict[str, Any]]:
+        result = self._make_graphql_request(self.RECORD_BY_PID_QUERY, {'pid': pid})
+        data = self._unwrap_data(result)
+        record = data.get('record_v1')
+        if record:
+            logger.info("Fetched archive record %s from GraphQL", pid)
+        else:
+            logger.warning("No archive record found for PID %s", pid)
+        return record
     
     def validate_pid(self, pid: str) -> bool:
         """

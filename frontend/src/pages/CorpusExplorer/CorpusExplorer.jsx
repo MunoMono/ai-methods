@@ -2,6 +2,7 @@ import { InlineNotification, Tag } from '@carbon/react'
 import { Search } from '@carbon/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getAuthoritySummary } from '../../api/authorities'
 import { listDocuments, getDocument, getDocumentAnnotations } from '../../api/documents'
 import { getSimilarDocuments, autocompleteSearch } from '../../api/search'
 import CorpusSearchPanel from '../../components/corpus/CorpusSearchPanel'
@@ -26,6 +27,7 @@ const CorpusExplorer = () => {
   const [detailLoading, setDetailLoading] = useState(false)
   const [selectedDetail, setSelectedDetail] = useState(null)
   const [suggestions, setSuggestions] = useState({ documents: [], themes: [], entities: [] })
+  const [authoritySummary, setAuthoritySummary] = useState(null)
 
   useEffect(() => {
     let isCancelled = false
@@ -73,6 +75,29 @@ const CorpusExplorer = () => {
   }, [filters.year, filters.status])
 
   useEffect(() => {
+    let isCancelled = false
+
+    const loadAuthoritySummary = async () => {
+      try {
+        const payload = await getAuthoritySummary()
+        if (!isCancelled) {
+          setAuthoritySummary(payload)
+        }
+      } catch (authorityError) {
+        if (!isCancelled) {
+          console.error('Failed to load authority summary:', authorityError)
+        }
+      }
+    }
+
+    loadAuthoritySummary()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
     if (!selectedDocumentId) {
       setSelectedDetail(null)
       return
@@ -105,7 +130,7 @@ const CorpusExplorer = () => {
             ...selectedDocument,
             ...detail,
             pid: annotations.pid || selectedDocument.pid || null,
-            page_count: annotations.page_count || detail.page_count || 0
+            page_count: annotations.page_count ?? detail.page_count ?? null
           },
           annotations,
           similarDocuments: similar.similarDocuments || []
@@ -194,6 +219,17 @@ const CorpusExplorer = () => {
         />
       </Column>
 
+      {authoritySummary && (
+        <Column>
+          <InlineNotification
+            lowContrast
+            kind="info"
+            title="Archive authorities"
+            subtitle={`${authoritySummary.totalRecords} authority records across ${authoritySummary.count} types. Authorities support future entity resolution, filtering and controlled query expansion. They are not source-document evidence.`}
+          />
+        </Column>
+      )}
+
       {error && (
         <Column>
           <InlineNotification
@@ -227,6 +263,7 @@ const CorpusExplorer = () => {
         <DocumentDetailPanel
           detail={selectedDetail}
           loading={detailLoading}
+          authoritySummary={authoritySummary}
           onTraceEvidence={() => navigate('/source-interrogation')}
           onViewAnalytics={() => navigate('/semantic-atlas')}
           onInspectMissingness={() => navigate('/absences')}

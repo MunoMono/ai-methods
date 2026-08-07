@@ -6,7 +6,7 @@ import asyncio
 import logging
 import os
 
-from app.api.routes import agent, sessions, experiments, metrics, documents, sync, graphql_sync, provenance, analysis, viz, search, missingness, claims, query_runs, cross_read
+from app.api.routes import agent, sessions, experiments, metrics, documents, sync, graphql_sync, provenance, analysis, viz, search, missingness, claims, query_runs, cross_read, authorities
 from app.api.graphql.schema import schema
 from app.core.config import settings
 from app.services.granite_service import initialize_granite
@@ -76,6 +76,7 @@ app.include_router(missingness.router, prefix="/api/missingness", tags=["missing
 app.include_router(claims.router, prefix="/api/claims", tags=["claims"])
 app.include_router(query_runs.router, prefix="/api/query-runs", tags=["query-runs"])
 app.include_router(cross_read.router, prefix="/api/cross-read", tags=["cross-read"])
+app.include_router(authorities.router, prefix="/api/authorities", tags=["authorities"])
 
 # GraphQL endpoint
 graphql_app = GraphQLRouter(schema)

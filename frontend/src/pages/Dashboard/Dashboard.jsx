@@ -2,6 +2,8 @@ import { ClickableTile, InlineNotification, Tag, Tile } from '@carbon/react'
 import { useNavigate } from 'react-router-dom'
 import { Search, WarningAlt, Checkmark, InProgress, Chip, ArrowRight } from '@carbon/icons-react'
 import { useEffect, useMemo, useState } from 'react'
+import { getAuthoritySummary } from '../../api/authorities'
+import { getDocumentInventorySummary } from '../../api/documents'
 import PageHeader from '../../components/layout/PageHeader'
 import { PageGrid, PageColumn as Column } from '../../components/layout/PageGrid'
 import SectionHeading from '../../components/layout/SectionHeading'
@@ -37,10 +39,14 @@ const readinessDefinitions = [
   }
 ]
 
+const formatMetricValue = (value, fallback = 'Not yet recorded') => (value === null || value === undefined ? fallback : value)
+
 const Dashboard = () => {
   const navigate = useNavigate()
   const [graniteInfo, setGraniteInfo] = useState(null)
   const [stats, setStats] = useState(null)
+  const [authoritySummary, setAuthoritySummary] = useState(null)
+  const [inventorySummary, setInventorySummary] = useState(null)
   const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
@@ -48,9 +54,11 @@ const Dashboard = () => {
 
     const loadDashboard = async () => {
       try {
-        const [granitePayload, statsPayload] = await Promise.all([
+        const [granitePayload, statsPayload, authorityPayload, inventoryPayload] = await Promise.all([
           getGraniteModelInfo().catch(() => null),
-          fetchDashboardStats().catch(() => null)
+          fetchDashboardStats().catch(() => null),
+          getAuthoritySummary().catch(() => null),
+          getDocumentInventorySummary().catch(() => null)
         ])
 
         if (isCancelled) {
@@ -59,6 +67,8 @@ const Dashboard = () => {
 
         setGraniteInfo(granitePayload)
         setStats(statsPayload)
+        setAuthoritySummary(authorityPayload)
+        setInventorySummary(inventoryPayload)
       } catch (error) {
         if (!isCancelled) {
           setLoadError(error.message || 'Failed to load dashboard metrics.')
@@ -77,12 +87,25 @@ const Dashboard = () => {
     const overview = stats?.overview || {}
     const mlProcessing = stats?.mlProcessing || {}
     return [
-      { label: 'Local corpus documents', value: overview.totalDocuments ?? 0 },
-      { label: 'Local persisted pages', value: overview.totalPages ?? 0 },
-      { label: 'Documents with embeddings', value: mlProcessing.documentsWithEmbeddings ?? 0 },
-      { label: 'Local PDF assets', value: overview.totalPdfAssets ?? overview.totalPdfs ?? 0 }
+      { label: 'Local corpus documents', value: formatMetricValue(overview.totalDocuments, 0) },
+      { label: 'Local persisted pages', value: formatMetricValue(overview.totalPages) },
+      { label: 'Documents with embeddings', value: formatMetricValue(mlProcessing.documentsWithEmbeddings, 0) },
+      { label: 'Archive-linked PDF assets', value: formatMetricValue(overview.totalPdfAssets ?? overview.totalPdfs, 0) }
     ]
   }, [stats])
+
+  const archiveInventoryStatus = useMemo(() => {
+    if (!inventorySummary) {
+      return []
+    }
+
+    return [
+      { label: 'Active archive assets', value: inventorySummary.count },
+      { label: 'ML eligible', value: inventorySummary.eligibleUnrestricted + inventorySummary.eligibleRestricted },
+      { label: 'ML excluded', value: inventorySummary.excluded },
+      { label: 'Archive authorities', value: authoritySummary ? `${authoritySummary.totalRecords} records / ${authoritySummary.count} types` : 'Unavailable' },
+    ]
+  }, [authoritySummary, inventorySummary])
 
   const recentActivity = stats?.recentActivity?.length
     ? stats.recentActivity.slice(0, 4).map((item) => ({
@@ -168,7 +191,7 @@ const Dashboard = () => {
         )}
 
         <Column>
-          <SectionHeading title="Corpus status" />
+          <SectionHeading title="Local experimental corpus" />
           <p className="app-copy-tight">These figures describe the local persisted experimental corpus and runtime state, not the full remote archive inventory.</p>
         </Column>
 
@@ -180,6 +203,24 @@ const Dashboard = () => {
             </Tile>
           </Column>
         ))}
+
+        {archiveInventoryStatus.length > 0 && (
+          <>
+            <Column>
+              <SectionHeading title="Remote archive inventory" />
+              <p className="app-copy-tight">These figures describe the live archive-backed source inventory exposed in Sources. They do not refer to the raw `documents` table total.</p>
+            </Column>
+
+            {archiveInventoryStatus.map((item) => (
+              <Column key={item.label} lg={4} md={4} sm={4}>
+                <Tile className="dashboard__info-tile">
+                  <h4>{item.label}</h4>
+                  <p className="dashboard__metric-value">{item.value}</p>
+                </Tile>
+              </Column>
+            ))}
+          </>
+        )}
 
         <Column>
           <SectionHeading title="Five-bucket readiness" />

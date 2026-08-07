@@ -219,6 +219,50 @@ AUTHORITY_DEFINITIONS = {
     }
 }
 
+AUTHORITY_ALLOWED_ROLES = {
+  'agent_employment': ['entity_resolution', 'retrieval_filter', 'structural_context', 'corroborative_check'],
+  'ddr_projects': ['entity_resolution', 'retrieval_filter', 'controlled_query_expansion', 'structural_context', 'corroborative_check'],
+  'ref_students': ['entity_resolution', 'retrieval_filter', 'structural_context', 'corroborative_check'],
+  'ref_fonds': ['retrieval_filter', 'structural_context', 'corroborative_check'],
+  'ref_publication_type': ['retrieval_filter', 'structural_context', 'corroborative_check'],
+  'ref_epistemic_stance': ['structural_context', 'corroborative_check'],
+  'ref_methodology': ['retrieval_filter', 'controlled_query_expansion', 'structural_context', 'corroborative_check'],
+  'ref_project_theme': ['retrieval_filter', 'controlled_query_expansion', 'structural_context', 'corroborative_check'],
+  'ref_ddr_period': ['retrieval_filter', 'controlled_query_expansion', 'structural_context', 'corroborative_check'],
+  'ref_beneficiary_audience': ['structural_context', 'corroborative_check'],
+  'ref_project_outcome': ['structural_context', 'corroborative_check'],
+}
+
+
+def get_authority_inventory() -> list[dict]:
+  inventory = []
+  for authority_type, config in AUTHORITY_DEFINITIONS.items():
+    inventory.append(
+      {
+        'authority_type': authority_type,
+        'category': config['category'],
+        'id_field': config['id_field'],
+        'label_field': config['label_field'],
+        'code_field': config.get('code_field'),
+        'description_field': config.get('description_field'),
+        'metadata_fields': config.get('metadata_fields', []),
+        'allowed_roles': AUTHORITY_ALLOWED_ROLES.get(authority_type, ['structural_context']),
+      }
+    )
+  return inventory
+
+
+def sync_all_authorities_with_report() -> dict:
+  total_synced = sync_all_authorities()
+  inventory = get_authority_inventory()
+  return {
+    'total_synced': total_synced,
+    'authority_types': len(inventory),
+    'core_types': len([item for item in inventory if item['category'] == 'core']),
+    'critical_types': len([item for item in inventory if item['category'] == 'critical']),
+    'inventory': inventory,
+  }
+
 
 def fetch_authority_data(authority_type: str, query: str) -> list:
     """Fetch authority data from DDR GraphQL API."""

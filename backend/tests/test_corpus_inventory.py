@@ -125,6 +125,34 @@ class CorpusInventoryServiceTests(unittest.TestCase):
         self.assertEqual(row['ml_policy_status'], 'eligible_page_restricted')
         self.assertEqual(row['metadata_source'], 'archive_graphql.records_v1')
 
+    def test_flatten_record_with_multiple_assets_keeps_one_row_per_pdf_master(self):
+        record = {
+            'id': '155',
+            'pid': '014262507600',
+            'title': 'Design Education Unit | DEU',
+            'public_uri': 'https://ddrarchive.org/id/record/014262507600',
+            'attached_media': [
+                {
+                    'id': '149',
+                    'pid': '287080879712',
+                    'title': 'Design Education Unit',
+                    'pdf_files': [
+                        {'filename': 'excluded.pdf', 'role': 'pdf_master', 'url': 'https://archive.test/excluded.pdf', 'label': 'Excluded'},
+                        {'filename': 'restricted.pdf', 'role': 'pdf_master', 'url': 'https://archive.test/restricted.pdf', 'label': 'Restricted'},
+                    ],
+                    'digital_assets': [
+                        {'role': 'pdf_master', 'filename': 'excluded.pdf', 'assetId': 'asset-excluded', 'pid': 'pid-excluded', 'use_for_ml': False, 'ml_pages': None, 'mime': 'application/pdf'},
+                        {'role': 'pdf_master', 'filename': 'restricted.pdf', 'assetId': 'asset-restricted', 'pid': 'pid-restricted', 'use_for_ml': True, 'ml_pages': '3-5', 'mime': 'application/pdf'},
+                    ],
+                }
+            ],
+        }
+
+        rows = self.service.flatten_records_pdf_sources([record])
+        self.assertEqual(len(rows), 2)
+        self.assertEqual({row['asset_pid'] for row in rows}, {'pid-excluded', 'pid-restricted'})
+        self.assertEqual({row['ml_policy_status'] for row in rows}, {'excluded_use_for_ml_false', 'eligible_page_restricted'})
+
     def test_missing_metadata_is_preserved(self):
         self.service.authority_service = type('StubAuthorityService', (), {
             'fetch_published_records': lambda self, status='published': [

@@ -1,6 +1,14 @@
 @use '@carbon/react/scss/spacing' as *;
 
 .audit-workbench {
+  &__tag-row {
+    margin-bottom: $spacing-05;
+  }
+
+  &__authority-grid {
+    margin-top: $spacing-05;
+  }
+
   &__claims-list {
     margin-top: $spacing-05;
   }
