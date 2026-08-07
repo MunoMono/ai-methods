@@ -12,6 +12,7 @@ from app.services.docling_processor import DoclingProcessor
 from app.services.embedding_service import EmbeddingService
 from app.core.database import LocalSessionLocal
 from app.models.document import Document, DocumentChunk
+from app.services.metadata_roles import extract_metadata_roles
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -145,10 +146,23 @@ async def get_document(document_id: str):
         
         return {
             "document_id": doc.document_id,
+            "pid": doc.pid,
+            "authority_id": doc.authority_id,
+            "archive_record_id": doc.archive_record_id,
+            "archive_record_pid": doc.archive_record_pid,
+            "asset_id": doc.asset_id,
+            "asset_pid": doc.asset_pid,
+            "asset_id_or_asset_pid": doc.asset_id_or_asset_pid,
             "title": doc.title,
             "publication_year": doc.publication_year,
             "filename": doc.filename,
+            "source_uri": doc.source_uri,
+            "page_count": doc.page_count,
+            "ingestion_version": doc.ingestion_version,
+            "corpus_version": doc.corpus_version,
             "processing_status": doc.processing_status,
+            "ml_policy_status": doc.ml_policy_status,
+            "ml_exclusion_reason": doc.ml_exclusion_reason,
             "has_diagrams": doc.has_diagrams,
             "created_at": doc.created_at.isoformat()
         }
@@ -179,8 +193,12 @@ async def list_documents(
             "documents": [
                 {
                     "document_id": doc.document_id,
+                    "pid": doc.pid,
+                    "asset_id_or_asset_pid": doc.asset_id_or_asset_pid,
                     "title": doc.title,
                     "publication_year": doc.publication_year,
+                    "page_count": doc.page_count,
+                    "ml_policy_status": doc.ml_policy_status,
                     "status": doc.processing_status
                 }
                 for doc in docs
@@ -213,16 +231,37 @@ async def get_ml_annotations(document_id: str):
             raise HTTPException(status_code=404, detail="Document not found")
         
         authority_data = doc.authority_data or {}
+        roles = extract_metadata_roles(authority_data)
         page_count = getattr(doc, 'page_count', None)
         ml_processed_at = getattr(doc, 'ml_processed_at', None)
+        source_filename = authority_data.get('source_filename') or doc.filename
+        public_url = roles['retrieval_provenance'].get('record_public_uri') or authority_data.get('record_public_uri') or authority_data.get('public_uri')
         
         return {
             "document_id": doc.document_id,
             "pid": doc.pid,
             "title": doc.title,
-            "used_for_ml": authority_data.get('used_for_ml', False),
+            "archive_record_pid": doc.archive_record_pid or roles['retrieval_provenance'].get('archive_record_pid'),
+            "archive_record_id": doc.archive_record_id or roles['retrieval_provenance'].get('archive_record_id'),
+            "asset_id": doc.asset_id or roles['retrieval_provenance'].get('asset_id'),
+            "asset_pid": doc.asset_pid or roles['retrieval_provenance'].get('asset_pid'),
+            "asset_id_or_asset_pid": doc.asset_id_or_asset_pid or roles['retrieval_provenance'].get('asset_id_or_asset_pid'),
+            "source_filename": source_filename,
+            "source_uri": doc.source_uri,
+            "used_for_ml": authority_data.get('use_for_ml', doc.use_for_ml),
             "ml_pages": authority_data.get('ml_pages', ''),
+            "ml_page_scope": authority_data.get('ml_page_scope', doc.ml_page_scope),
             "ml_annotation": authority_data.get('ml_annotation', ''),
+            "ml_policy_status": doc.ml_policy_status,
+            "ml_exclusion_reason": doc.ml_exclusion_reason,
+            "processing_status": doc.processing_status,
+            "ingestion_version": doc.ingestion_version,
+            "corpus_version": doc.corpus_version,
+            "metadata_roles_version": authority_data.get('metadata_roles_version'),
+            "record_public_uri": public_url,
+            "corpus_control": roles['corpus_control'],
+            "retrieval_provenance": roles['retrieval_provenance'],
+            "catalogue_metadata": roles['catalogue_metadata'],
             "page_count": page_count,
             "ml_processed_at": ml_processed_at.isoformat() if ml_processed_at else None
         }

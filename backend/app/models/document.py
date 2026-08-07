@@ -1,5 +1,5 @@
 """
-Document models for temporal epistemic drift analysis
+Document models for temporal testamentary traces analysis
 """
 from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Float
 from sqlalchemy.dialects.postgresql import JSONB
@@ -9,16 +9,21 @@ from app.core.database import LocalBase
 
 
 class Document(LocalBase):
-    """Documents for epistemic drift analysis (1965-1985)"""
+    """Documents for testamentary traces analysis (1965-1985)"""
     __tablename__ = "documents"
     
     id = Column(Integer, primary_key=True, index=True)
     document_id = Column(String(255), unique=True, nullable=False, index=True)
     
     # Authority linkage (REQUIRED for training corpus)
-    pid = Column(String(255), unique=True, nullable=False, index=True)  # Postgres authority PID
-    authority_id = Column(String(255), index=True)  # DDR Archive authority ID
-    authority_data = Column(JSONB)  # Cached GraphQL authority metadata
+    pid = Column(String(255), nullable=False, index=True)  # Archive media/item PID
+    authority_id = Column(String(255), index=True)  # DDR Archive media/item ID
+    authority_data = Column(JSONB)  # Cached GraphQL metadata used for this source PDF
+    archive_record_id = Column(String(255), index=True)
+    archive_record_pid = Column(String(255), index=True)
+    asset_id = Column(String(255), index=True)
+    asset_pid = Column(String(255), index=True)
+    asset_id_or_asset_pid = Column(String(255), index=True)
     
     title = Column(String(500))
     publication_year = Column(Integer, nullable=False, index=True)  # 1965-1985
@@ -28,7 +33,12 @@ class Document(LocalBase):
     filename = Column(String(255), nullable=False)
     file_type = Column(String(50))  # 'pdf', 'tiff', etc.
     s3_key = Column(String(500))  # S3 storage path
+    source_uri = Column(Text, unique=True)
+    source_path = Column(Text)
     file_size_bytes = Column(Integer)
+    checksum_sha256 = Column(String(64), index=True)
+    page_count = Column(Integer)
+    ocr_status = Column(String(64), default='unknown')
     
     # Extracted content
     extracted_text = Column(Text)  # Full text from Docling
@@ -39,6 +49,13 @@ class Document(LocalBase):
     processed_at = Column(DateTime, default=datetime.utcnow)
     processing_status = Column(String(50), default='pending')  # pending, processing, completed, failed
     processing_error = Column(Text)
+    ingestion_version = Column(String(255), index=True)
+    corpus_version = Column(String(255), index=True)
+    metadata_source = Column(String(255))
+    use_for_ml = Column(Integer)
+    ml_page_scope = Column(Text)
+    ml_policy_status = Column(String(64), index=True)
+    ml_exclusion_reason = Column(Text)
     
     # Document metadata (renamed to avoid SQLAlchemy reserved word)
     doc_metadata = Column(JSONB)  # Author, journal, keywords, etc.
@@ -95,7 +112,7 @@ class DocumentChunk(LocalBase):
 
 
 class DriftAnalysis(LocalBase):
-    """Temporal epistemic drift analysis results"""
+    """Temporal testamentary traces analysis results"""
     __tablename__ = "drift_analyses"
     
     id = Column(Integer, primary_key=True, index=True)

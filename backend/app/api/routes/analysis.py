@@ -11,6 +11,7 @@ from sqlalchemy import text
 
 from app.services.granite_service import get_granite_service
 from app.core.database import LocalSessionLocal
+from app.services.metadata_roles import extract_metadata_roles
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -113,8 +114,22 @@ async def analyze_query(request: AnalysisRequest):
                         document_id,
                         chunk_text,
                         source_page,
+                        source_section,
+                        chunk_type,
+                        d.pid,
+                        d.title,
+                        d.filename,
+                        d.authority_id,
+                        d.archive_record_id,
+                        d.archive_record_pid,
+                        d.asset_id,
+                        d.asset_pid,
+                        d.asset_id_or_asset_pid,
+                        d.source_uri,
+                        d.authority_data,
                         ts_rank(search_tsv, websearch_to_tsquery('english', :query)) AS rank
-                    FROM document_chunks
+                    FROM document_chunks dc
+                    JOIN documents d ON d.document_id = dc.document_id
                     WHERE search_tsv @@ websearch_to_tsquery('english', :query)
                     ORDER BY rank DESC
                     LIMIT :limit
@@ -124,11 +139,7 @@ async def analyze_query(request: AnalysisRequest):
             ).fetchall()
 
             context_chunks = [
-                {
-                    "id": row.chunk_id,
-                    "text": row.chunk_text,
-                    "citation": f"{row.document_id}, p.{row.source_page if row.source_page is not None else '?'}",
-                }
+                _build_context_chunk(row)
                 for row in rows
             ]
         finally:
@@ -161,6 +172,41 @@ async def analyze_query(request: AnalysisRequest):
     except Exception as e:
         logger.error(f"Analysis failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+def _build_context_chunk(row: Any) -> Dict[str, Any]:
+    authority_data = dict(row.authority_data or {})
+    authority_data.update(
+        {
+            'title': row.title,
+            'source_filename': row.filename,
+            'authority_id': row.authority_id,
+            'archive_record_id': row.archive_record_id,
+            'archive_record_pid': row.archive_record_pid,
+            'asset_id': row.asset_id,
+            'asset_pid': row.asset_pid,
+            'asset_id_or_asset_pid': row.asset_id_or_asset_pid,
+            'source_uri': row.source_uri,
+            'source_page': row.source_page,
+            'source_section': row.source_section,
+            'chunk_id': row.chunk_id,
+            'chunk_type': row.chunk_type,
+            'pid': row.pid,
+        }
+    )
+    roles = extract_metadata_roles(authority_data)
+    provenance = roles['retrieval_provenance']
+    page_value = provenance.get('page') if provenance.get('page') is not None else '?'
+    asset_label = provenance.get('asset_pid') or provenance.get('asset_id') or provenance.get('media_id') or 'unknown-asset'
+    return {
+        'id': row.chunk_id,
+        'document_id': row.document_id,
+        'text': row.chunk_text,
+        'citation': f"{row.document_id}, asset {asset_label}, p.{page_value}",
+        'provenance': provenance,
+        'catalogue_metadata': roles['catalogue_metadata'],
+        'corpus_control': roles['corpus_control'],
+    }
 
 
 @router.get("/model-info", response_model=ModelInfoResponse)

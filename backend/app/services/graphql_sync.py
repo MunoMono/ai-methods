@@ -12,6 +12,9 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import LocalSessionLocal
 from app.models.document import Document
+from app.services.corpus_identity import DEFAULT_INGESTION_VERSION, build_stable_document_id
+from app.services.metadata_roles import attach_metadata_roles
+from app.services.ml_policy import evaluate_ml_policy
 
 logger = logging.getLogger(__name__)
 
@@ -194,13 +197,58 @@ class GraphQLSyncService:
                     if pdf_assets:
                         training_eligible.append({
                             'type': 'pdf',
-                            'item': {'pid': media_pid, 'title': media.get('title') or item.get('title')},
+                            'item': {
+                                'id': media.get('id'),
+                                'pid': media_pid,
+                                'title': media.get('title') or item.get('title'),
+                                'public_uri': media.get('public_uri'),
+                                'creator_agent_label': media.get('creator_agent_label'),
+                                'date_begin': media.get('date_begin'),
+                                'date_end': media.get('date_end'),
+                                'level': media.get('level'),
+                                'fonds_code': media.get('fonds_code'),
+                                'series_id': media.get('series_id'),
+                                'ddr_period': media.get('ddr_period'),
+                                'category': media.get('category'),
+                                'reference_code': media.get('reference_code'),
+                                'scope_and_content': media.get('scope_and_content'),
+                                'methodology': media.get('methodology'),
+                                'project_theme': media.get('project_theme'),
+                                'project_title': media.get('project_title'),
+                                'location_repository': media.get('location_repository'),
+                                'current_consent_status': media.get('current_consent_status'),
+                                'takedown_contact': media.get('takedown_contact'),
+                                'access_level': media.get('access_level'),
+                                'copyright_holder': media.get('copyright_holder'),
+                                'rights_holders': media.get('rights_holders'),
+                                'rights_statement_uri': media.get('rights_statement_uri'),
+                                'abstract': media.get('abstract'),
+                                'caption': media.get('caption'),
+                                'subjects': media.get('subjects'),
+                                'parent_collection': media.get('parent_collection'),
+                                'language_codes': media.get('language_codes'),
+                                'used_for_ml': media.get('used_for_ml'),
+                                'ml_annotation': media.get('ml_annotation'),
+                                'record_id': item.get('id'),
+                                'record_pid': item.get('pid'),
+                                'record_title': item.get('title'),
+                                'record_public_uri': item.get('public_uri'),
+                            },
                             'master_files': pdf_assets
                         })
                     elif tiff_assets:
                         training_eligible.append({
                             'type': 'tiff',
-                            'item': {'pid': media_pid, 'title': media.get('title') or item.get('title')},
+                            'item': {
+                                'id': media.get('id'),
+                                'pid': media_pid,
+                                'title': media.get('title') or item.get('title'),
+                                'public_uri': media.get('public_uri'),
+                                'record_id': item.get('id'),
+                                'record_pid': item.get('pid'),
+                                'record_title': item.get('title'),
+                                'record_public_uri': item.get('public_uri'),
+                            },
                             'master_files': tiff_assets
                         })
             else:
@@ -266,20 +314,36 @@ class GraphQLSyncService:
         
         db = LocalSessionLocal()
         try:
-            # Check if already exists by PID
-            existing = db.query(Document).filter(
-                Document.pid == pid
-            ).first()
+            source_uri = master_file.get('url', '')
+            filename = master_file.get('filename', f'unknown.{file_type}')
+            asset_identifier = master_file.get('assetId') or master_file.get('pid')
+            document_id = build_stable_document_id(
+                pid,
+                filename,
+                source_uri,
+                archive_record_pid=item.get('record_pid'),
+                asset_identifier=asset_identifier,
+            )
+            policy = evaluate_ml_policy(
+                asset_present=file_type != 'pdf' or bool(master_file),
+                asset_use_for_ml=master_file.get('use_for_ml') if file_type == 'pdf' else True,
+                ml_pages=master_file.get('ml_pages') if file_type == 'pdf' else None,
+            )
+
+            existing = None
+            if source_uri:
+                existing = db.query(Document).filter(Document.source_uri == source_uri).first()
+            if existing is None:
+                existing = db.query(Document).filter(Document.document_id == document_id).first()
             
             if existing:
-                logger.info(f"Document with PID {pid} already exists: {existing.document_id}")
+                logger.info(f"Document with source URI {source_uri or filename} already exists: {existing.document_id}")
                 return existing.document_id
             
             # Extract metadata
             title = item.get('title', 'Untitled')
             authority_id = item.get('id')
-            s3_key = master_file.get('url', '')
-            filename = master_file.get('filename', f'unknown.{file_type}')
+            s3_key = source_uri
             
             # Determine file type
             if file_type == 'tiff':
@@ -293,35 +357,57 @@ class GraphQLSyncService:
             publication_year = int(year_match.group(1)) if year_match else 1970
             
             # Build authority_data from GraphQL response
-            authority_data = {
+            authority_data = attach_metadata_roles({
                 'id': authority_id,
+                'authority_id': authority_id,
                 'pid': pid,
                 'title': title,
                 'file_type': file_type,
                 'public_uri': item.get('public_uri'),
                 'copyright_holder': item.get('copyright_holder'),
                 'rights_holders': item.get('rights_holders'),
+                'rights_statement_uri': item.get('rights_statement_uri'),
                 'master_label': master_file.get('label'),
                 'master_url': master_file.get('url'),
                 'scope_and_content': item.get('scope_and_content'),
                 'project_title': item.get('project_title'),
+                'project_theme': item.get('project_theme'),
+                'methodology': item.get('methodology'),
+                'location_repository': item.get('location_repository'),
+                'current_consent_status': item.get('current_consent_status'),
+                'takedown_contact': item.get('takedown_contact'),
+                'abstract': item.get('abstract'),
+                'caption': item.get('caption'),
+                'subjects': item.get('subjects'),
+                'parent_collection': item.get('parent_collection'),
+                'level': item.get('level'),
+                'fonds_code': item.get('fonds_code'),
+                'series_id': item.get('series_id'),
+                'ddr_period': item.get('ddr_period'),
+                'language_codes': item.get('language_codes'),
                 'creator_agent_label': item.get('creator_agent_label'),
                 # ML annotation metadata (item level)
                 'used_for_ml': item.get('used_for_ml', False),
                 'ml_annotation': item.get('ml_annotation', ''),
                 # ML annotation metadata (digital asset level - has page annotations)
+                'asset_id': master_file.get('assetId'),
+                'asset_pid': master_file.get('pid'),
+                'asset_id_or_asset_pid': asset_identifier,
                 'asset_use_for_ml': master_file.get('use_for_ml', False),
                 'ml_pages': master_file.get('ml_pages', ''),
+                'ml_page_scope': policy.get('ml_page_scope'),
+                'ml_policy_status': policy.get('ml_policy_status'),
+                'ml_exclusion_reason': policy.get('ml_exclusion_reason'),
                 'asset_filename': master_file.get('filename', ''),
-            }
+                'record_id': item.get('record_id'),
+                'record_pid': item.get('record_pid'),
+                'record_title': item.get('record_title'),
+                'record_public_uri': item.get('record_public_uri'),
+            })
             
             if dry_run:
                 logger.info(f"[DRY RUN] Would create document: PID={pid}, title={title}")
-                return f"dry_run_{pid}"
-            
-            # Generate document ID
-            import uuid
-            document_id = f"doc_{uuid.uuid4().hex[:12]}"
+                return document_id
             
             # Create document record
             doc = Document(
@@ -329,13 +415,26 @@ class GraphQLSyncService:
                 pid=pid,  # CRITICAL: Authority linkage
                 authority_id=authority_id,
                 authority_data=authority_data,  # Cached GraphQL metadata
+                archive_record_id=item.get('record_id'),
+                archive_record_pid=item.get('record_pid'),
+                asset_id=master_file.get('assetId'),
+                asset_pid=master_file.get('pid'),
+                asset_id_or_asset_pid=asset_identifier,
                 title=title,
                 publication_year=publication_year,
                 filename=filename,
                 file_type=mime_type,  # application/pdf or image/tiff
                 s3_key=s3_key,
+                source_uri=source_uri,
                 file_size_bytes=0,  # Unknown from GraphQL
-                processing_status='pending'
+                ocr_status='unknown',
+                processing_status=policy.get('ml_policy_status') or 'pending',
+                ingestion_version=DEFAULT_INGESTION_VERSION,
+                metadata_source='archive_graphql.records_v1',
+                use_for_ml=policy.get('use_for_ml'),
+                ml_page_scope=policy.get('ml_page_scope'),
+                ml_policy_status=policy.get('ml_policy_status'),
+                ml_exclusion_reason=policy.get('ml_exclusion_reason'),
             )
             
             db.add(doc)

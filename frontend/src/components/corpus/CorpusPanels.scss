@@ -29,6 +29,10 @@
     overflow-wrap: anywhere;
   }
 
+  &__copy strong {
+    font-weight: 600;
+  }
+
   &__copy,
   &__meta {
     margin: 0;

@@ -48,6 +48,8 @@ build/
 tmp/
 temp/
 *.tmp
+.phase2-samples/
+artifacts/turin-phase2b-sample-pdfs/
 
 # Wealth management app (now independent repo)
 wealth-management/

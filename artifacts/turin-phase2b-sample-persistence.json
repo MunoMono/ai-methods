@@ -1,0 +1,59 @@
+{
+  "upserted": 3,
+  "documents": [
+    {
+      "document_id": "doc_230440137378_063f52d0a4b3",
+      "pid": "230440137378",
+      "archive_record_pid": "451248821104",
+      "authority_id": "131",
+      "asset_id": "3c927b768995fdc77f243420f8640431269603e1d163068d7aee3098c3f5384b",
+      "asset_pid": "671802725005",
+      "asset_id_or_asset_pid": "3c927b768995fdc77f243420f8640431269603e1d163068d7aee3098c3f5384b",
+      "source_uri": "https://archive-media.lon1.digitaloceanspaces.com/ddr-archive/records/876970045058/master/3c927b768995fdc77f243420f8640431269603e1d163068d7aee3098c3f5384b__pdf_master__v1.pdf",
+      "checksum_sha256": "3c927b768995fdc77f243420f8640431269603e1d163068d7aee3098c3f5384b",
+      "page_count": 28,
+      "ocr_status": "text_layer_present",
+      "processing_status": "eligible_unrestricted",
+      "use_for_ml": 1,
+      "ml_page_scope": "all_pages",
+      "ml_policy_status": "eligible_unrestricted",
+      "ml_exclusion_reason": null
+    },
+    {
+      "document_id": "doc_287080879712_65e55d098336",
+      "pid": "287080879712",
+      "archive_record_pid": "014262507600",
+      "authority_id": "149",
+      "asset_id": "1b843ccf7939d2c94c6c62e029a56eec3b0ccb9b79e9f38800a3f1066c0aab1e",
+      "asset_pid": "942396101474",
+      "asset_id_or_asset_pid": "1b843ccf7939d2c94c6c62e029a56eec3b0ccb9b79e9f38800a3f1066c0aab1e",
+      "source_uri": "https://archive-media.lon1.digitaloceanspaces.com/ddr-archive/records/287080879712/master/1b843ccf7939d2c94c6c62e029a56eec3b0ccb9b79e9f38800a3f1066c0aab1e__pdf_master__v1.pdf",
+      "checksum_sha256": null,
+      "page_count": null,
+      "ocr_status": "unverified_remote_source",
+      "processing_status": "excluded_use_for_ml_false",
+      "use_for_ml": 0,
+      "ml_page_scope": null,
+      "ml_policy_status": "excluded_use_for_ml_false",
+      "ml_exclusion_reason": "asset_marked_use_for_ml_false"
+    },
+    {
+      "document_id": "doc_521129471965_ac7a965d232a",
+      "pid": "521129471965",
+      "archive_record_pid": "788065484899",
+      "authority_id": "124",
+      "asset_id": "014a6a4252a32d57bbba1064638776ce544760adc1a2de5c6d26b5c6800700bd",
+      "asset_pid": "787670925538",
+      "asset_id_or_asset_pid": "014a6a4252a32d57bbba1064638776ce544760adc1a2de5c6d26b5c6800700bd",
+      "source_uri": "https://archive-media.lon1.digitaloceanspaces.com/ddr-archive/records/83/master/014a6a4252a32d57bbba1064638776ce544760adc1a2de5c6d26b5c6800700bd__pdf_master__v1.pdf",
+      "checksum_sha256": "014a6a4252a32d57bbba1064638776ce544760adc1a2de5c6d26b5c6800700bd",
+      "page_count": 40,
+      "ocr_status": "text_layer_present",
+      "processing_status": "eligible_page_restricted",
+      "use_for_ml": 1,
+      "ml_page_scope": "19-20, 22-23",
+      "ml_policy_status": "eligible_page_restricted",
+      "ml_exclusion_reason": null
+    }
+  ]
+}

@@ -12,33 +12,28 @@ import '../../styles/pages/Dashboard.scss'
 const readinessDefinitions = [
   {
     key: 'source-interrogation',
-    title: 'Source interrogation',
-    description: 'Analytical output: retrieval trail / source stack.',
-    priority: 'Keep the retrieval path stable while shaping exportable research traces.'
+    title: 'Retrieval-augmented archival interrogation',
+    description: 'RAG becomes a method of archival interrogation when retrieval is treated as a traceable interpretive act rather than as automated answer production.'
   },
   {
     key: 'absences',
-    title: 'Absences',
-    description: 'Analytical output: missingness report / gap log.',
-    priority: 'Replace mock events with a lightweight backend gap log.'
+    title: 'Retrieval-augmented missingness',
+    description: 'Missingness becomes legible when failed retrieval, sparse metadata, absent entities, access restrictions and oral-history contradictions are recorded as analytical evidence.'
   },
   {
     key: 'cross-readings',
-    title: 'Cross-readings',
-    description: 'Analytical output: testimony-record map.',
-    priority: 'Add transcript-backed probes only when case studies require them.'
+    title: 'Oral-historical / testimony-archive cross-reading',
+    description: 'Oral history activates the archive not by filling gaps with facts, but by creating interpretive cross-readings between recollection, documentary trace and institutional memory.'
   },
   {
     key: 'semantic-atlas',
-    title: 'Semantic atlas',
-    description: 'Analytical output: atlas coordinates / cluster interpretation notes.',
-    priority: 'Keep visual interpretation tied to source records and notes.'
+    title: 'Embedding-based visual analytics',
+    description: 'Embedding-based visual analytics creates new legibilities by allowing contested design knowledge to be read as semantic proximity, cluster formation, anomaly and drift.'
   },
   {
     key: 'claims-evidence',
-    title: 'Claims and evidence',
-    description: 'Analytical output: claim-evidence matrix.',
-    priority: 'Back claims with persisted evidence attachments before automation.'
+    title: 'Corroborative checking and interpretive control',
+    description: 'Computational outputs become research evidence only when they are checked against provenance, metadata distribution, oral-historical interpretation and human judgement.'
   }
 ]
 
@@ -82,10 +77,10 @@ const Dashboard = () => {
     const overview = stats?.overview || {}
     const mlProcessing = stats?.mlProcessing || {}
     return [
-      { label: 'Documents', value: overview.totalDocuments ?? 0 },
-      { label: 'Pages', value: overview.totalPages ?? 0 },
-      { label: 'Embeddings', value: mlProcessing.documentsWithEmbeddings ?? 0 },
-      { label: 'PDF assets', value: overview.totalPdfAssets ?? overview.totalPdfs ?? 0 }
+      { label: 'Local corpus documents', value: overview.totalDocuments ?? 0 },
+      { label: 'Local persisted pages', value: overview.totalPages ?? 0 },
+      { label: 'Documents with embeddings', value: mlProcessing.documentsWithEmbeddings ?? 0 },
+      { label: 'Local PDF assets', value: overview.totalPdfAssets ?? overview.totalPdfs ?? 0 }
     ]
   }, [stats])
 
@@ -101,7 +96,8 @@ const Dashboard = () => {
       ]
 
   const limitations = [
-    'Only four Docling-ingested PDFs are available locally, so outputs are case-study scale.',
+    'Dashboard corpus counts describe the local persisted corpus, not the broader remote archive inventory discovered during Turin Phase 2.',
+    'Only a small number of locally materialized PDFs currently have extracted text, so outputs remain case-study scale.',
     'Missingness, Cross-read, and Claims still use mocked first-wave data contracts while backend tables stabilize.',
     'Clusters reflect the current embedded evidence surface, not the full archive, and must not be treated as proof.'
   ]
@@ -153,11 +149,11 @@ const Dashboard = () => {
                   <span className="dashboard__granite-hero-spec-value">{graniteInfo.device || 'CPU'}</span>
                 </div>
                 <div className="dashboard__granite-hero-spec">
-                  <span className="dashboard__granite-hero-spec-label">Max tokens</span>
+                  <span className="dashboard__granite-hero-spec-label">Active runtime max tokens</span>
                   <span className="dashboard__granite-hero-spec-value">{graniteInfo.max_tokens ?? 'N/A'}</span>
                 </div>
                 <div className="dashboard__granite-hero-spec">
-                  <span className="dashboard__granite-hero-spec-label">Temperature</span>
+                  <span className="dashboard__granite-hero-spec-label">Active runtime temperature</span>
                   <span className="dashboard__granite-hero-spec-value">{graniteInfo.temperature ?? 'N/A'}</span>
                 </div>
               </div>
@@ -173,6 +169,7 @@ const Dashboard = () => {
 
         <Column>
           <SectionHeading title="Corpus status" />
+          <p className="app-copy-tight">These figures describe the local persisted experimental corpus and runtime state, not the full remote archive inventory.</p>
         </Column>
 
         {corpusStatus.map((item) => (
@@ -196,7 +193,7 @@ const Dashboard = () => {
               </div>
               <h3>{item.title}</h3>
               <p>{item.description}</p>
-              <p className="dashboard__priority-copy">{item.priority}</p>
+              {item.priority ? <p className="dashboard__priority-copy">{item.priority}</p> : null}
             </ClickableTile>
           </Column>
         ))}

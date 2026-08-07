@@ -11,6 +11,8 @@ from typing import Any, Dict, List, Optional
 import httpx
 import psutil
 
+from app.services.metadata_roles import format_granite_source_block
+
 logger = logging.getLogger(__name__)
 
 
@@ -234,6 +236,10 @@ class GraniteService:
         """
         context_parts = []
         for i, chunk in enumerate(context_chunks, 1):
+            if chunk.get('provenance') or chunk.get('catalogue_metadata'):
+                context_parts.append(format_granite_source_block(i, chunk))
+                continue
+
             text = chunk.get("text", "")
             citation = chunk.get("citation", f"Source {i}")
             context_parts.append(f"[{i}] {text}\n   Citation: {citation}")
@@ -248,6 +254,8 @@ Rules:
 - Use short paragraphs or bullet points.
 - Where sources differ or contradict each other, name the tension explicitly.
 - Cite inline with [1], [2], etc. only when the source directly supports the claim. Do not invent citations.
+- Treat any ARCHIVE / CATALOGUE METADATA block as descriptive catalogue context about the object, not as quoted source-document language.
+- Distinguish clearly between catalogue description, source-document evidence, and your own inference.
 - Do not open with "Based on the sources" or any similar preamble. Start with substance.
 - If the sources do not contain enough information to answer, say so in one sentence.
 

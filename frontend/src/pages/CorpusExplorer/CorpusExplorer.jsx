@@ -189,8 +189,8 @@ const CorpusExplorer = () => {
         <InlineNotification
           lowContrast
           kind="info"
-          title="Analytical output"
-          subtitle="Source inspection produces a source handoff: document metadata, ingestion status, PID-linked annotations, and launch points into the core workbench views."
+          title="Methodological distinction"
+          subtitle="This view separates corpus-control policy, archive / catalogue metadata, and source provenance so researchers can inspect corpus decisions without mistaking them for source-document evidence."
         />
       </Column>
 

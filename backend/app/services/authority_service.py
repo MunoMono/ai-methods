@@ -4,7 +4,7 @@ Ensures only authority-linked assets enter the training corpus
 """
 import logging
 import requests
-from typing import Optional, Dict, List
+from typing import Any, Optional, Dict, List
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,134 @@ class AuthorityService:
     def __init__(self):
         self.graphql_endpoint = settings.DDR_GRAPHQL_ENDPOINT
         self.api_token = settings.DDR_API_TOKEN
+
+    PUBLISHED_RECORDS_QUERY = """
+    query GetPublishedRecords($status: String!) {
+        records_v1(status: $status) {
+            id
+            pid
+            title
+            public_uri
+            attached_media {
+                id
+                pid
+                title
+                public_uri
+                creator_agent_label
+                creators
+                level
+                fonds_code
+                language_codes
+                date_begin
+                date_end
+                series_id
+                ddr_period
+                artefact_date_from
+                artefact_date_to
+                category
+                reference_code
+                scope_and_content
+                methodology
+                project_theme
+                project_title
+                location_repository
+                current_consent_status
+                takedown_contact
+                access_level
+                copyright_holder
+                rights_holders
+                rights_statement_uri
+                abstract
+                caption
+                subjects
+                parent_collection
+                used_for_ml
+                ml_annotation
+                pdf_files {
+                    filename
+                    role
+                    url
+                    label
+                }
+                digital_assets {
+                    role
+                    filename
+                    assetId
+                    pid
+                    use_for_ml
+                    ml_pages
+                    ml_annotation
+                    mime
+                }
+            }
+        }
+    }
+    """
+
+    SEARCH_MEDIA_ITEMS_QUERY = """
+    query SearchMediaItems($query: String, $excludeAttached: Boolean!, $limit: Int!) {
+        search_media_items(query: $query, exclude_attached: $excludeAttached, limit: $limit) {
+            id
+            pid
+            title
+            public_uri
+            creator_agent_label
+            creators
+            date_begin
+            date_end
+            level
+            fonds_code
+            language_codes
+            series_id
+            ddr_period
+            artefact_date_from
+            artefact_date_to
+            category
+            reference_code
+            scope_and_content
+            methodology
+            project_theme
+            project_title
+            location_repository
+            current_consent_status
+            takedown_contact
+            access_level
+            copyright_holder
+            rights_holders
+            rights_statement_uri
+            abstract
+            caption
+            subjects
+            parent_collection
+            used_for_ml
+            ml_annotation
+            pdf_files {
+                filename
+                role
+                url
+                label
+            }
+            digital_assets {
+                role
+                filename
+                assetId
+                pid
+                use_for_ml
+                ml_pages
+                ml_annotation
+                mime
+            }
+        }
+    }
+    """
+
+    ALL_MEDIA_ITEMS_QUERY = """
+    query GetAllMediaItems {
+        all_media_items {
+            pid
+        }
+    }
+    """
     
     def _make_graphql_request(self, query: str, variables: Optional[Dict] = None) -> Optional[Dict]:
         """Make GraphQL request to DDR Archive API"""
@@ -49,6 +177,43 @@ class AuthorityService:
         except requests.RequestException as e:
             logger.error(f"GraphQL request failed: {e}")
             return None
+
+    @staticmethod
+    def _unwrap_data(result: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if not result:
+            return {}
+        return result.get('data') or {}
+
+    def search_media_items(
+        self,
+        query_text: str,
+        limit: int = 10,
+        exclude_attached: bool = False,
+    ) -> List[Dict[str, Any]]:
+        result = self._make_graphql_request(
+            self.SEARCH_MEDIA_ITEMS_QUERY,
+            {
+                'query': query_text,
+                'excludeAttached': exclude_attached,
+                'limit': limit,
+            },
+        )
+        data = self._unwrap_data(result)
+        return data.get('search_media_items') or []
+
+    def get_media_item_metadata(self, pid: str) -> Optional[Dict[str, Any]]:
+        candidates = self.search_media_items(pid, limit=10, exclude_attached=False)
+        exact_matches = [item for item in candidates if item.get('pid') == pid]
+        if exact_matches:
+            return exact_matches[0]
+        return None
+
+    def fetch_published_records(self, status: str = 'published') -> List[Dict[str, Any]]:
+        result = self._make_graphql_request(self.PUBLISHED_RECORDS_QUERY, {'status': status})
+        data = self._unwrap_data(result)
+        records = data.get('records_v1') or []
+        logger.info("Fetched %s published archive records from GraphQL", len(records))
+        return records
     
     def validate_pid(self, pid: str) -> bool:
         """
@@ -60,26 +225,12 @@ class AuthorityService:
         Returns:
             True if PID is valid and exists in authorities
         """
-        query = """
-        query ValidatePID($pid: String!) {
-            authority(pid: $pid) {
-                pid
-                id
-            }
-        }
-        """
-        
-        result = self._make_graphql_request(query, {'pid': pid})
-        
-        if not result:
+        metadata = self.get_media_item_metadata(pid)
+        if metadata is None:
             logger.warning(f"Could not validate PID {pid} - GraphQL unavailable")
             return False
-        
-        # Check if authority exists
-        data = result.get('data', {})
-        authority = data.get('authority')
-        
-        if authority and authority.get('pid') == pid:
+
+        if metadata.get('pid') == pid:
             logger.info(f"PID {pid} validated successfully")
             return True
         
@@ -99,40 +250,7 @@ class AuthorityService:
         Returns:
             Authority metadata dict or None if not found
         """
-        query = """
-        query GetAuthority($pid: String!) {
-            authority(pid: $pid) {
-                pid
-                id
-                title
-                description
-                caption
-                creator
-                date
-                subject
-                type
-                format
-                language
-                coverage
-                rights
-                digitalAssets {
-                    s3Key
-                    fileType
-                    fileSize
-                    caption
-                }
-            }
-        }
-        """
-        
-        result = self._make_graphql_request(query, {'pid': pid})
-        
-        if not result:
-            return None
-        
-        data = result.get('data', {})
-        authority = data.get('authority')
-        
+        authority = self.get_media_item_metadata(pid)
         if authority:
             logger.info(f"Fetched authority metadata for PID {pid}")
             return authority
@@ -152,24 +270,17 @@ class AuthorityService:
         Returns:
             List of valid PID strings
         """
-        query = """
-        query GetAllPIDs($limit: Int!) {
-            authorities(limit: $limit) {
-                pid
-            }
-        }
-        """
-        
-        result = self._make_graphql_request(query, {'limit': limit})
-        
+        result = self._make_graphql_request(self.ALL_MEDIA_ITEMS_QUERY)
         if not result:
             logger.error("Could not fetch PIDs from DDR Archive")
             return []
-        
-        data = result.get('data', {})
-        authorities = data.get('authorities', [])
-        
-        pids = [auth['pid'] for auth in authorities if auth.get('pid')]
+
+        data = self._unwrap_data(result)
+        authorities = data.get('all_media_items', [])
+
+        pids = sorted({auth['pid'] for auth in authorities if auth.get('pid')})
+        if limit:
+            pids = pids[:limit]
         
         logger.info(f"Fetched {len(pids)} valid PIDs from DDR Archive")
         return pids
@@ -211,6 +322,7 @@ class AuthorityService:
             # Cache authority metadata
             doc.authority_data = metadata
             doc.authority_id = metadata.get('id')
+            doc.metadata_source = 'archive_graphql.search_media_items'
             
             # Enrich title if not set
             if not doc.title and metadata.get('title'):
